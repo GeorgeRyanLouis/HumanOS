@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life OS — Calorie Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Poppins:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<link rel="stylesheet" href="global.css">
+<style>
+.levelband{
+  background:var(--panel);border:4px solid var(--border);border-radius:var(--radius);
+  padding:24px;margin-bottom:32px;display:flex;align-items:center;gap:24px;
+  box-shadow:0 8px 0 var(--shadow-color);position:relative;
+}
+.level-badge{
+  position:relative;width:72px;height:72px;flex:none;border-radius:20px;
+  background:var(--gold);border:4px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:0 6px 0 var(--gold-shadow), 0 6px 0 4px var(--border);
+}
+.level-badge .lv{font-size:12px;font-weight:800;color:var(--border);text-transform:uppercase;font-family:var(--font-display);}
+.level-badge .num{font-size:28px;font-weight:800;color:var(--border);line-height:1;font-family:var(--font-display);}
+.levelband-mid{flex:1;min-width:180px;}
+.levelband-title{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);margin-bottom:10px;}
+.levelband-title small{color:var(--text-muted);font-size:12px;margin-left:12px;font-weight:600;}
+.gauge{position:relative;height:20px;border-radius:999px;background:var(--panel-3);border:3px solid var(--border);overflow:hidden;}
+.gauge-fill{
+  height:100%;border-radius:999px;position:relative;transition:width 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background:var(--teal);box-shadow:inset 0 -4px 0 var(--teal-shadow);
+}
+.grid{display:grid;grid-template-columns:280px 1fr;gap:32px;align-items:start;}
+@media(max-width:800px){.grid{grid-template-columns:1fr;}}
+.emblem-wrap{display:flex;justify-content:center;margin-bottom:20px;}
+.charname{text-align:center;font-family:var(--font-display);font-weight:800;font-size:20px;color:var(--text);margin-bottom:6px;}
+.chartitle{text-align:center;font-size:12px;color:var(--orange);font-weight:700;margin-bottom:24px;text-transform:uppercase;}
+.skillblock{margin-bottom:20px;}
+.skillblock-head{display:flex;justify-content:space-between;font-size:13px;margin-bottom:10px;font-weight:700;}
+.statlist{list-style:none;margin:24px 0 0;padding:24px 0 0;border-top:3px solid var(--panel-3);}
+.statlist li{display:flex;justify-content:space-between;font-size:14px;padding:10px 0;color:var(--text-muted);font-weight:600;}
+.statlist li b{color:var(--text);font-family:var(--font-mono);}
+.gaugegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+@media(max-width:520px){.gaugegrid{grid-template-columns:1fr;}}
+.macro-card{
+  background:var(--panel-2);border:3px solid var(--border);border-radius:var(--radius-sm);
+  padding:20px;transition:0.1s ease;box-shadow:0 6px 0 var(--shadow-color);
+}
+.macro-card:hover{transform:translateY(2px);box-shadow:0 4px 0 var(--shadow-color);}
+.macro-card-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;}
+.macro-card-head .mname{font-size:12px;font-weight:800;text-transform:uppercase;color:var(--text-muted);font-family:var(--font-display);}
+.macro-card-head .mval{font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--text);}
+.banner{
+  border:4px dashed var(--border);border-radius:var(--radius);padding:24px;
+  background:var(--panel-2);
+}
+.banner-title{font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--text);margin-bottom:12px;}
+.banner p{font-size:14px;color:var(--text-muted);line-height:1.6;margin:0 0 16px;font-weight:500;}
+.miniprogress{height:12px;border-radius:999px;background:var(--panel-3);border:3px solid var(--border);overflow:hidden;}
+.miniprogress-fill{height:100%;background:var(--violet);box-shadow:inset 0 -3px 0 var(--violet-shadow);}
+.reco-card{
+  border:4px solid var(--border);border-radius:var(--radius);padding:28px;
+  background:var(--gold);box-shadow:0 8px 0 var(--shadow-color);
+}
+.reco-eyebrow{font-family:var(--font-display);font-size:12px;font-weight:800;color:var(--border);text-transform:uppercase;margin-bottom:10px;}
+.reco-name{font-family:var(--font-display);font-weight:800;font-size:22px;color:var(--border);margin-bottom:8px;}
+.reco-sub{font-size:14px;color:var(--border);margin-bottom:20px;font-weight:600;opacity:0.8;}
+.reco-itemlist{list-style:none;margin:0 0 20px;padding:0;border-top:3px solid rgba(0,0,0,0.1);border-bottom:3px solid rgba(0,0,0,0.1);}
+.reco-itemlist li{display:flex;justify-content:space-between;font-size:14px;color:var(--border);padding:12px 0;font-weight:700;}
+.reco-macros{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;font-family:var(--font-mono);font-size:14px;font-weight:700;}
+.streakblock{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:20px 24px;background:var(--violet);border:4px solid var(--border);
+  border-radius:var(--radius-sm);margin-bottom:24px;box-shadow:0 6px 0 var(--violet-shadow), 0 6px 0 4px var(--border);
+}
+.streak-num{font-family:var(--font-display);font-weight:800;font-size:32px;color:var(--panel);}
+.streak-label{font-size:12px;color:var(--panel);font-weight:700;text-transform:uppercase;margin-top:4px;}
+.reset-timer{font-family:var(--font-mono);font-size:18px;font-weight:700;color:var(--panel);text-align:right;}
+.questcard{
+  display:flex;align-items:center;gap:20px;padding:20px;border-radius:var(--radius-sm);
+  border:4px solid var(--border);background:var(--panel);margin-bottom:16px;transition:0.1s ease;
+  box-shadow:0 6px 0 var(--shadow-color);
+}
+.questcard:hover{transform:translateY(2px);box-shadow:0 4px 0 var(--shadow-color);}
+.questcard.done{background:var(--mint);box-shadow:0 6px 0 var(--teal-shadow), 0 6px 0 4px var(--border);}
+.questcard-icon{
+  width:44px;height:44px;border-radius:12px;flex:none;font-size:20px;
+  display:flex;align-items:center;justify-content:center;
+  border:3px solid var(--border);color:var(--border);background:var(--panel);
+}
+.questcard.done .questcard-icon{background:var(--panel);color:var(--mint);}
+.questcard-title{font-size:16px;color:var(--text);font-weight:800;font-family:var(--font-display);}
+.questcard-desc{font-size:13px;color:var(--text-muted);margin-top:4px;font-weight:600;}
+.questcard-exp{font-family:var(--font-display);font-size:14px;font-weight:800;color:var(--orange);flex:none;}
+.mealcard{background:var(--panel);border:4px solid var(--border);border-radius:var(--radius-sm);padding:24px;margin-bottom:20px;box-shadow:0 8px 0 var(--shadow-color);transition:0.1s ease;}
+.mealcard:hover{transform:translateY(2px);box-shadow:0 6px 0 var(--shadow-color);}
+.mealcard-catbadge{font-family:var(--font-display);font-size:12px;font-weight:800;text-transform:uppercase;padding:6px 16px;border-radius:999px;border:3px solid var(--border);background:var(--panel-2);}
+.mealcard-macros{margin-left:auto;font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--text);}
+.mealcard-toggle{background:none;border:none;color:var(--text-muted);font-family:var(--font-display);font-size:12px;font-weight:800;cursor:pointer;padding:12px 0 0;text-transform:uppercase;}
+.mealcard-items{list-style:none;margin:12px 0 0;padding:16px 0 0;border-top:3px solid var(--panel-3);display:none;}
+.mealcard-items.show{display:block;}
+.mealcard-items li{display:flex;justify-content:space-between;font-size:14px;color:var(--text-muted);padding:8px 0;font-weight:600;}
+.mealcard-actions{display:flex;gap:12px;margin-top:20px;}
+.empty-note{font-size:15px;color:var(--text-dim);padding:32px 8px;text-align:center;font-weight:700;font-family:var(--font-display);}
+.chiprow{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:24px;}
+.chip{
+  font-family:var(--font-display);font-size:12px;font-weight:800;padding:10px 20px;border-radius:999px;
+  background:var(--panel);border:3px solid var(--border);color:var(--text);
+  cursor:pointer;transition:0.1s ease;text-transform:uppercase;box-shadow:0 4px 0 var(--shadow-color);
+}
+.chip.active{background:var(--violet);color:var(--panel);box-shadow:0 4px 0 var(--violet-shadow), 0 4px 0 4px var(--border);}
+.calcsummary{background:var(--panel-2);border:3px solid var(--border);border-radius:var(--radius-sm);padding:24px;margin-bottom:24px;}
+.calcsummary-kcal{font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--orange);margin-bottom:12px;}
+.calcsummary-macros{display:flex;gap:20px;font-family:var(--font-mono);font-size:14px;font-weight:700;}
+.toaststack{position:fixed;bottom:32px;right:32px;display:flex;flex-direction:column;gap:12px;z-index:200;}
+.toast{
+  background:var(--panel);border:3px solid var(--border);padding:16px 24px;
+  border-radius:16px;color:var(--text);font-size:14px;font-weight:800;
+  box-shadow:0 6px 0 var(--shadow-color);animation:toastin 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes toastin{from{transform:translateX(50px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+</style>
+</head>
+<body>
+<div class="app" id="appRoot" style="display:none;">
+
+  <div class="loadingnote" id="loadingNote" style="display:none;">Loading your character…</div>
+
+  <div id="appBody">
+
+  <div class="topbar">
+    <div class="wordmark">Life OS<span>Smart Calorie Tracker · Phase 1</span></div>
+    <div class="topbar-right">
+      <div class="date-chip" id="dateChip">—</div>
+      <div class="icon-btn" id="themeToggleBtn" title="Toggle Theme">☀️</div>
+      <div class="icon-btn" id="settingsBtn" title="Biometrics">⚙</div>
+      <div class="icon-btn" id="signOutBtn" title="Sign out">⏻</div>
+    </div>
+  </div>
+
+  <div class="levelband">
+    <div class="level-badge"><div class="lv">LV</div><div class="num" id="charLevelNum">1</div></div>
+    <div class="levelband-mid">
+      <div class="levelband-title"><span id="charTitle">Novice Nourisher</span><small id="charExpText">0 / 100 EXP</small></div>
+      <div class="gauge"><div class="gauge-fill" id="charExpFill" style="width:0%;--fill-color:var(--gold);--fill-glow:rgba(232,185,74,.5);"></div></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="col-left">
+      <div class="panel">
+        <div class="panel-title">Character</div>
+        <div class="emblem-wrap">
+          <svg width="76" height="76" viewBox="0 0 76 76">
+            <polygon points="38,4 70,20 70,56 38,72 6,56 6,20" fill="#262238" stroke="#E8B94A" stroke-width="1.5"/>
+            <polygon points="38,16 58,27 58,49 38,60 18,49 18,27" fill="none" stroke="#4FB6C9" stroke-width="1"/>
+            <circle cx="38" cy="38" r="6" fill="#E8B94A"/>
+          </svg>
+        </div>
+        <div class="charname">Your Character</div>
+        <div class="chartitle" id="charTitleSmall">Novice Nourisher</div>
+
+        <div class="skillblock">
+          <div class="skillblock-head"><b>Nutrition</b><span id="nutriExpText">Lv 1</span></div>
+          <div class="gauge" style="height:10px;"><div class="gauge-fill" id="nutriExpFill" style="width:0%;--fill-color:var(--teal);--fill-glow:rgba(79,182,201,.5);"></div></div>
+        </div>
+
+        <ul class="statlist">
+          <li>Meals logged<b id="statMealsLogged">0</b></li>
+          <li>Day streak<b id="statStreak">0</b></li>
+          <li>Today's goal<b id="statGoalStatus">—</b></li>
+          <li id="statWeightGoalRow" style="display:none;">Weight goal<b id="statWeightGoal">—</b></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-right">
+      <div class="panel">
+        <div class="panel-title">Today's Quest</div>
+        <div class="gaugegrid" id="macroGauges"></div>
+      </div>
+
+      <div class="panel" id="questsPanel"></div>
+
+      <div class="panel" id="recoPanel"></div>
+
+      <div class="panel">
+        <div class="panel-title">Meal Log — Today<span style="font-weight:normal;text-transform:none;letter-spacing:0;" id="mealCountLabel"></span></div>
+        <div id="mealList"></div>
+        <div style="margin-top:14px;">
+          <button class="btn btn-primary btn-block" id="openLogBtn">+ Log Meal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+</div>
+
+<div class="overlay" id="logOverlay">
+  <div class="modal">
+    <div class="modal-title" id="logModalTitle">Log a meal</div>
+    
+    <div class="modal-body">
+      <div class="field">
+        <label>Category</label>
+        <div class="categoryrow" id="categoryRow">
+          <button type="button" class="catbtn" data-cat="breakfast">Breakfast</button>
+          <button type="button" class="catbtn" data-cat="lunch">Lunch</button>
+          <button type="button" class="catbtn" data-cat="dinner">Dinner</button>
+          <button type="button" class="catbtn" data-cat="snack">Snack</button>
+        </div>
+      </div>
+
+      <div class="field searchwrap">
+        <label>Add food item</label>
+        <input type="text" id="foodSearch" placeholder="Search food database" autocomplete="off">
+        <div class="searchdropdown" id="foodResults"></div>
+      </div>
+
+      <div class="fieldrow-2" id="qtyRow" style="display:none;">
+        <div class="field"><label id="qtyLabel">Serving size (g)</label><input type="number" id="itemQty" min="0"></div>
+        <div class="field"><button type="button" class="btn btn-block" id="addItemBtn">Add item</button></div>
+      </div>
+
+      <button type="button" class="btn btn-sm btn-ghost btn-block" id="openCustomFoodBtn" style="margin-bottom:14px;">+ Create custom food</button>
+
+      <div class="chiprow" id="freqChips"></div>
+
+      <div class="draftlist" id="draftList"></div>
+      <div class="draftsummary" id="draftSummary"></div>
+
+      <div class="field"><label>Time</label><input type="time" id="mTime"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelLogBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveLogBtn">Save meal</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="overlay" id="customFoodOverlay" style="z-index:60;">
+  <div class="modal">
+    <div class="modal-title">Create custom food</div>
+    <div class="field"><label>Food name</label><input type="text" id="cfName" placeholder="Grandma's lasagna"></div>
+    <div class="fieldrow-2">
+      <div class="field"><label>Unit type</label>
+        <select id="cfUnitType">
+          <option value="weight">Weight-based</option>
+          <option value="item">Item-based</option>
+        </select>
+      </div>
+      <div class="field"><label id="cfBaseAmountLabel">Base amount (g)</label><input type="number" id="cfBaseAmount" min="0" value="100"></div>
+    </div>
+    <div class="field" id="cfUnitLabelField">
+      <label>Unit label</label><input type="text" id="cfUnitLabel" placeholder="g">
+    </div>
+    <div class="fieldrow">
+      <div class="field"><label>Calories</label><input type="number" id="cfCal" min="0"></div>
+      <div class="field"><label>Protein (g)</label><input type="number" id="cfProt" min="0"></div>
+      <div class="field"><label>Carbs (g)</label><input type="number" id="cfCarb" min="0"></div>
+    </div>
+    <div class="field"><label>Fat (g)</label><input type="number" id="cfFat" min="0"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelCustomFoodBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveCustomFoodBtn">Save food</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="settingsOverlay">
+  <div class="modal">
+    <div class="modal-title">Character biometrics</div>
+    <div class="fieldrow-2">
+      <div class="field"><label>Age</label><input type="number" id="bAge" min="1" placeholder="25"></div>
+      <div class="field"><label>Gender</label>
+        <select id="bGender">
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+      </div>
+    </div>
+    <div class="fieldrow-2">
+      <div class="field"><label>Height (cm)</label><input type="number" id="bHeight" min="1" placeholder="170"></div>
+      <div class="field"><label>Weight (kg)</label><input type="number" id="bWeight" min="1" placeholder="70"></div>
+    </div>
+    <div class="fieldrow-2">
+      <div class="field"><label>Activity level</label>
+        <select id="bActivity">
+          <option value="sedentary">Sedentary</option>
+          <option value="light">Light</option>
+          <option value="moderate">Moderate</option>
+          <option value="active">Active</option>
+          <option value="veryactive">Very active</option>
+        </select>
+      </div>
+      <div class="field"><label>Target goal</label>
+        <select id="bGoal">
+          <option value="lose">Lose</option>
+          <option value="maintain">Maintain</option>
+          <option value="bulk">Bulk</option>
+        </select>
+      </div>
+    </div>
+    <div class="field" id="rateField">
+      <label>Rate of progress (kg/week)</label>
+      <select id="bRate">
+        <option value="0.25">0.25 kg/week</option>
+        <option value="0.5">0.5 kg/week</option>
+        <option value="0.75">0.75 kg/week</option>
+        <option value="1">1 kg/week</option>
+      </select>
+    </div>
+    <div class="field"><label>Target weight (kg) — optional</label><input type="number" id="bTargetWeight" min="1" placeholder="75"></div>
+    <div class="calcsummary">
+      <div class="calcsummary-title">Calculated daily target</div>
+      <div class="calcsummary-kcal" id="calcKcal">— kcal</div>
+      <div class="calcsummary-macros">
+        <span>Protein <b id="calcProt">—</b></span>
+        <span>Carbs <b id="calcCarb">—</b></span>
+        <span>Fat <b id="calcFat">—</b></span>
+      </div>
+      <div class="calcsummary-sub" id="calcSub">BMR — · TDEE —</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelSettingsBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveSettingsBtn">Save biometrics</button>
+    </div>
+  </div>
+</div>
+
+<div class="toaststack" id="toastStack"></div>
+<script src="global.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const MIN_MEALS_FOR_RECS = 12;
+const MIN_DISTINCT_FOODS = 3;
+const FALLBACK_GOALS = {calories:2000, protein:100, carbs:200, fat:60};
+const ACTIVITY_MULTIPLIERS = {sedentary:1.2, light:1.375, moderate:1.55, active:1.725, veryactive:1.9};
+const RATE_KCAL_PER_KG_WEEK = 1100;
+const DEFAULT_BIO = {age:25, gender:'male', height:170, weight:70, activity:'moderate', goal:'bulk', rate:0.25, targetWeight:75};
+const CATEGORY_META = {
+  breakfast:{label:'Breakfast', color:'#E8B94A'},
+  lunch:{label:'Lunch', color:'#4FB6C9'},
+  dinner:{label:'Dinner', color:'#A78BEB'},
+  snack:{label:'Snack', color:'#D8657A'}
+};
+
+const SEED_FOOD_DB = [
+  {name:'Chicken breast, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:165, p:31, c:0, f:3.6},
+  {name:'Chicken thigh, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:209, p:26, c:0, f:10.9},
+  {name:'Salmon, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:208, p:20, c:0, f:13},
+  {name:'Tuna, canned in water', unitType:'weight', unitLabel:'g', baseAmount:100, cal:116, p:26, c:0, f:0.8},
+  {name:'Egg, large, cooked', unitType:'item', unitLabel:'egg', baseAmount:1, cal:72, p:6.3, c:0.4, f:4.8},
+  {name:'Egg white', unitType:'item', unitLabel:'egg white', baseAmount:1, cal:17, p:3.6, c:0.2, f:0.1},
+  {name:'Greek yogurt, plain nonfat', unitType:'weight', unitLabel:'g', baseAmount:100, cal:59, p:10, c:3.6, f:0.4},
+  {name:'Whole milk', unitType:'weight', unitLabel:'ml', baseAmount:100, cal:61, p:3.2, c:4.8, f:3.3},
+  {name:'Skim milk', unitType:'weight', unitLabel:'ml', baseAmount:100, cal:34, p:3.4, c:5, f:0.1},
+  {name:'Cottage cheese, low fat', unitType:'weight', unitLabel:'g', baseAmount:100, cal:72, p:12, c:3, f:1},
+  {name:'Cheddar cheese', unitType:'weight', unitLabel:'g', baseAmount:100, cal:403, p:25, c:1.3, f:33},
+  {name:'Tofu, firm', unitType:'weight', unitLabel:'g', baseAmount:100, cal:76, p:8, c:1.9, f:4.8},
+  {name:'Lentils, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:116, p:9, c:20, f:0.4},
+  {name:'Chickpeas, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:164, p:9, c:27, f:2.6},
+  {name:'Black beans, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:132, p:8.9, c:23.7, f:0.5},
+  {name:'White rice, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:130, p:2.7, c:28, f:0.3},
+  {name:'Brown rice, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:123, p:2.7, c:26, f:1},
+  {name:'Quinoa, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:120, p:4.4, c:21, f:1.9},
+  {name:'Oats, dry', unitType:'weight', unitLabel:'g', baseAmount:100, cal:389, p:17, c:66, f:7},
+  {name:'Whole wheat bread', unitType:'item', unitLabel:'slice', baseAmount:1, cal:81, p:4, c:14, f:1.1},
+  {name:'White bread', unitType:'item', unitLabel:'slice', baseAmount:1, cal:66, p:2.3, c:12.4, f:0.8},
+  {name:'Potato, baked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:93, p:2.5, c:21, f:0.1},
+  {name:'Sweet potato, baked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:90, p:2, c:21, f:0.1},
+  {name:'Pasta, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:131, p:5, c:25, f:1.1},
+  {name:'Broccoli', unitType:'weight', unitLabel:'g', baseAmount:100, cal:35, p:2.4, c:7, f:0.4},
+  {name:'Spinach', unitType:'weight', unitLabel:'g', baseAmount:100, cal:23, p:2.9, c:3.6, f:0.4},
+  {name:'Banana', unitType:'item', unitLabel:'banana', baseAmount:1, cal:105, p:1.3, c:27, f:0.4},
+  {name:'Apple', unitType:'item', unitLabel:'apple', baseAmount:1, cal:95, p:0.5, c:25, f:0.3},
+  {name:'Avocado', unitType:'item', unitLabel:'avocado', baseAmount:1, cal:240, p:3, c:13, f:22},
+  {name:'Almonds', unitType:'weight', unitLabel:'g', baseAmount:100, cal:579, p:21, c:22, f:50},
+  {name:'Peanut butter', unitType:'weight', unitLabel:'g', baseAmount:100, cal:588, p:25, c:20, f:50},
+  {name:'Olive oil', unitType:'weight', unitLabel:'g', baseAmount:100, cal:884, p:0, c:0, f:100},
+  {name:'Butter', unitType:'weight', unitLabel:'g', baseAmount:100, cal:717, p:0.9, c:0.1, f:81},
+  {name:'Ground beef 85/15, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:250, p:26, c:0, f:17},
+  {name:'Ground turkey 93/7, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:176, p:22, c:0, f:10},
+  {name:'Pork chop, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:231, p:26, c:0, f:13},
+  {name:'Shrimp, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:99, p:24, c:0.2, f:0.3},
+  {name:'Whole grain cereal', unitType:'weight', unitLabel:'g', baseAmount:100, cal:370, p:8, c:74, f:3},
+  {name:'Whey protein powder', unitType:'item', unitLabel:'scoop', baseAmount:1, cal:120, p:24, c:2.4, f:2},
+  {name:'Hummus', unitType:'weight', unitLabel:'g', baseAmount:100, cal:166, p:8, c:14, f:10},
+  {name:'Orange', unitType:'item', unitLabel:'orange', baseAmount:1, cal:62, p:1.2, c:15.4, f:0.2},
+  {name:'Blueberries', unitType:'weight', unitLabel:'g', baseAmount:100, cal:57, p:0.7, c:14, f:0.3},
+  {name:'Walnuts', unitType:'weight', unitLabel:'g', baseAmount:100, cal:654, p:15, c:14, f:65},
+  {name:'Cod fillet, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:105, p:23, c:0, f:0.9},
+  {name:'Turkey breast, deli slices', unitType:'weight', unitLabel:'g', baseAmount:100, cal:104, p:17, c:3, f:2},
+  {name:'Bacon, cooked', unitType:'item', unitLabel:'slice', baseAmount:1, cal:43, p:3, c:0.1, f:3.3},
+  {name:'Cheese pizza slice', unitType:'item', unitLabel:'slice', baseAmount:1, cal:266, p:11, c:33, f:10},
+  {name:'Grilled chicken caesar salad', unitType:'weight', unitLabel:'g', baseAmount:100, cal:130, p:10, c:4, f:8},
+  {name:'Chicken burrito bowl', unitType:'weight', unitLabel:'g', baseAmount:100, cal:150, p:9, c:17, f:5},
+  {name:'Oatmeal with banana', unitType:'weight', unitLabel:'g', baseAmount:100, cal:90, p:3, c:16, f:1.5},
+  {name:'PB&J sandwich', unitType:'item', unitLabel:'sandwich', baseAmount:1, cal:350, p:12, c:40, f:16},
+  {name:'Beef stir fry with rice', unitType:'weight', unitLabel:'g', baseAmount:100, cal:140, p:8, c:15, f:5},
+  {name:'Beef sirloin steak, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:201, p:29, c:0, f:9},
+  {name:'Ribeye steak, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:291, p:24, c:0, f:21},
+  {name:'Lamb chop, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:294, p:25, c:0, f:21},
+  {name:'Duck breast, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:201, p:23, c:0, f:11},
+  {name:'Bison, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:146, p:28, c:0, f:2.4},
+  {name:'Veal cutlet, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:172, p:29, c:0, f:5.5},
+  {name:'Tilapia, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:128, p:26, c:0, f:2.7},
+  {name:'Halibut, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:140, p:27, c:0, f:2.9},
+  {name:'Mackerel, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:262, p:24, c:0, f:18},
+  {name:'Sardines, canned', unitType:'weight', unitLabel:'g', baseAmount:100, cal:208, p:25, c:0, f:11},
+  {name:'Trout, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:190, p:26, c:0, f:8.6},
+  {name:'Mahi mahi, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:109, p:24, c:0, f:0.9},
+  {name:'Calamari, fried', unitType:'weight', unitLabel:'g', baseAmount:100, cal:175, p:15, c:8, f:9},
+  {name:'Crab meat, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:97, p:19, c:0, f:1.5},
+  {name:'Lobster, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:89, p:19, c:0, f:0.9},
+  {name:'Mussels, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:172, p:24, c:7, f:4.5},
+  {name:'Oysters, raw', unitType:'weight', unitLabel:'g', baseAmount:100, cal:68, p:7, c:4, f:2.5},
+  {name:'Scallops, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:111, p:20, c:5, f:0.8},
+  {name:'Venison, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:158, p:30, c:0, f:3.2},
+  {name:'Turkey leg, roasted', unitType:'weight', unitLabel:'g', baseAmount:100, cal:208, p:28, c:0, f:10},
+  {name:'Chicken drumstick, cooked', unitType:'item', unitLabel:'drumstick', baseAmount:1, cal:172, p:17, c:0, f:11},
+  {name:'Chicken wing, cooked', unitType:'item', unitLabel:'wing', baseAmount:1, cal:99, p:9, c:0, f:6.6},
+  {name:'Mango', unitType:'item', unitLabel:'mango', baseAmount:1, cal:134, p:1.4, c:35, f:0.8},
+  {name:'Pineapple', unitType:'weight', unitLabel:'g', baseAmount:100, cal:50, p:0.5, c:13, f:0.1},
+  {name:'Papaya', unitType:'item', unitLabel:'half papaya', baseAmount:1, cal:68, p:1.1, c:17, f:0.4},
+  {name:'Kiwi', unitType:'item', unitLabel:'kiwi', baseAmount:1, cal:42, p:0.8, c:10, f:0.4},
+  {name:'Dragonfruit', unitType:'item', unitLabel:'fruit', baseAmount:1, cal:120, p:2.6, c:29, f:0.4},
+  {name:'Guava', unitType:'item', unitLabel:'guava', baseAmount:1, cal:37, p:1.4, c:8, f:0.5},
+  {name:'Lychee', unitType:'weight', unitLabel:'g', baseAmount:100, cal:66, p:0.8, c:17, f:0.4},
+  {name:'Pomegranate seeds', unitType:'weight', unitLabel:'g', baseAmount:100, cal:83, p:1.7, c:19, f:1.2},
+  {name:'Fig, fresh', unitType:'item', unitLabel:'fig', baseAmount:1, cal:37, p:0.4, c:10, f:0.1},
+  {name:'Plum', unitType:'item', unitLabel:'plum', baseAmount:1, cal:30, p:0.5, c:8, f:0.2},
+  {name:'Pear', unitType:'item', unitLabel:'pear', baseAmount:1, cal:101, p:0.6, c:27, f:0.2},
+  {name:'Grapes', unitType:'weight', unitLabel:'g', baseAmount:100, cal:69, p:0.7, c:18, f:0.2},
+  {name:'Watermelon', unitType:'weight', unitLabel:'g', baseAmount:100, cal:30, p:0.6, c:8, f:0.2},
+  {name:'Cantaloupe', unitType:'weight', unitLabel:'g', baseAmount:100, cal:34, p:0.8, c:8, f:0.2},
+  {name:'Cherries', unitType:'weight', unitLabel:'g', baseAmount:100, cal:63, p:1.1, c:16, f:0.2},
+  {name:'Apricot', unitType:'item', unitLabel:'apricot', baseAmount:1, cal:17, p:0.5, c:4, f:0.1},
+  {name:'Persimmon', unitType:'item', unitLabel:'persimmon', baseAmount:1, cal:118, p:1, c:31, f:0.3},
+  {name:'Passionfruit', unitType:'item', unitLabel:'fruit', baseAmount:1, cal:17, p:0.4, c:4, f:0.1},
+  {name:'Jackfruit', unitType:'weight', unitLabel:'g', baseAmount:100, cal:95, p:1.7, c:23, f:0.6},
+  {name:'Starfruit', unitType:'item', unitLabel:'fruit', baseAmount:1, cal:28, p:1, c:6, f:0.3},
+  {name:'Couscous, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:112, p:3.8, c:23, f:0.2},
+  {name:'Barley, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:123, p:2.3, c:28, f:0.4},
+  {name:'Bulgur, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:83, p:3, c:18, f:0.2},
+  {name:'Farro, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:130, p:5, c:26, f:1},
+  {name:'Buckwheat, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:92, p:3.4, c:20, f:0.6},
+  {name:'Polenta, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:85, p:2, c:18, f:0.6},
+  {name:'Rye bread', unitType:'item', unitLabel:'slice', baseAmount:1, cal:83, p:2.7, c:15, f:1.1},
+  {name:'Naan bread', unitType:'item', unitLabel:'piece', baseAmount:1, cal:262, p:9, c:45, f:5},
+  {name:'Pita bread', unitType:'item', unitLabel:'piece', baseAmount:1, cal:165, p:5.5, c:33, f:0.7},
+  {name:'Corn tortilla', unitType:'item', unitLabel:'tortilla', baseAmount:1, cal:52, p:1.4, c:11, f:0.6},
+  {name:'Flour tortilla', unitType:'item', unitLabel:'tortilla', baseAmount:1, cal:140, p:4, c:24, f:3},
+  {name:'Rice noodles, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:109, p:0.9, c:25, f:0.2},
+  {name:'Soba noodles, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:99, p:5, c:21, f:0.1},
+  {name:'Ramen noodles, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:138, p:4.5, c:25, f:2},
+  {name:'Udon noodles, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:127, p:3.3, c:27, f:0.4},
+  {name:'California roll', unitType:'item', unitLabel:'roll (6pc)', baseAmount:1, cal:255, p:9, c:38, f:7},
+  {name:'Pad thai', unitType:'weight', unitLabel:'g', baseAmount:100, cal:155, p:7, c:20, f:5},
+  {name:'Pho, beef', unitType:'weight', unitLabel:'g', baseAmount:100, cal:45, p:4, c:5, f:1},
+  {name:'Ramen bowl', unitType:'weight', unitLabel:'g', baseAmount:100, cal:90, p:5, c:11, f:3},
+  {name:'Butter chicken', unitType:'weight', unitLabel:'g', baseAmount:100, cal:165, p:12, c:6, f:11},
+  {name:'Chicken tikka masala', unitType:'weight', unitLabel:'g', baseAmount:100, cal:160, p:13, c:7, f:9},
+  {name:'Falafel', unitType:'item', unitLabel:'piece', baseAmount:1, cal:57, p:2.3, c:5, f:3.3},
+  {name:'Shawarma wrap', unitType:'item', unitLabel:'wrap', baseAmount:1, cal:550, p:30, c:50, f:25},
+  {name:'Gyro', unitType:'item', unitLabel:'gyro', baseAmount:1, cal:620, p:32, c:55, f:30},
+  {name:'Pierogi', unitType:'item', unitLabel:'piece', baseAmount:1, cal:60, p:2, c:10, f:1.3},
+  {name:'Paella', unitType:'weight', unitLabel:'g', baseAmount:100, cal:155, p:9, c:18, f:5},
+  {name:'Risotto', unitType:'weight', unitLabel:'g', baseAmount:100, cal:166, p:4, c:25, f:5},
+  {name:'Chicken biryani', unitType:'weight', unitLabel:'g', baseAmount:100, cal:165, p:8, c:20, f:6},
+  {name:'Potsticker dumpling', unitType:'item', unitLabel:'piece', baseAmount:1, cal:40, p:1.5, c:5, f:1.5},
+  {name:'Kimchi', unitType:'weight', unitLabel:'g', baseAmount:100, cal:23, p:1.1, c:4, f:0.5},
+  {name:'Miso soup', unitType:'weight', unitLabel:'g', baseAmount:100, cal:40, p:2.2, c:4, f:1.7},
+  {name:'Tom yum soup', unitType:'weight', unitLabel:'g', baseAmount:100, cal:40, p:3, c:3, f:1.7},
+  {name:'Beef taco', unitType:'item', unitLabel:'taco', baseAmount:1, cal:210, p:12, c:15, f:11},
+  {name:'Chicken enchilada', unitType:'item', unitLabel:'piece', baseAmount:1, cal:320, p:18, c:28, f:15},
+  {name:'Tamale', unitType:'item', unitLabel:'piece', baseAmount:1, cal:285, p:7, c:32, f:15},
+  {name:'Croissant', unitType:'item', unitLabel:'croissant', baseAmount:1, cal:231, p:4.7, c:26, f:12},
+  {name:'Baguette', unitType:'weight', unitLabel:'g', baseAmount:100, cal:270, p:9, c:55, f:1.3},
+  {name:'Bruschetta', unitType:'item', unitLabel:'piece', baseAmount:1, cal:70, p:2, c:10, f:2.5},
+  {name:'Gnocchi, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:131, p:3.3, c:26, f:0.7},
+  {name:'Lasagna', unitType:'weight', unitLabel:'g', baseAmount:100, cal:135, p:8, c:12, f:6},
+  {name:'Moussaka', unitType:'weight', unitLabel:'g', baseAmount:100, cal:150, p:8, c:9, f:9},
+  {name:'Tabbouleh', unitType:'weight', unitLabel:'g', baseAmount:100, cal:120, p:3, c:16, f:5},
+  {name:'Injera', unitType:'item', unitLabel:'piece', baseAmount:1, cal:85, p:2.5, c:17, f:0.5},
+  {name:'Jollof rice', unitType:'weight', unitLabel:'g', baseAmount:100, cal:170, p:4, c:28, f:5},
+  {name:'Beef empanada', unitType:'item', unitLabel:'piece', baseAmount:1, cal:250, p:8, c:25, f:13},
+  {name:'Cheeseburger', unitType:'item', unitLabel:'burger', baseAmount:1, cal:350, p:18, c:30, f:17},
+  {name:'Hamburger', unitType:'item', unitLabel:'burger', baseAmount:1, cal:295, p:15, c:28, f:13},
+  {name:'Chicken nuggets', unitType:'item', unitLabel:'6-piece serving', baseAmount:1, cal:296, p:15, c:18, f:19},
+  {name:'French fries', unitType:'weight', unitLabel:'g', baseAmount:100, cal:312, p:3.4, c:41, f:15},
+  {name:'Fried chicken drumstick', unitType:'item', unitLabel:'piece', baseAmount:1, cal:227, p:15, c:8, f:15},
+  {name:'Fish and chips', unitType:'weight', unitLabel:'g', baseAmount:100, cal:230, p:10, c:22, f:12},
+  {name:'Hot dog', unitType:'item', unitLabel:'hot dog', baseAmount:1, cal:290, p:10, c:23, f:18},
+  {name:'Crispy chicken sandwich', unitType:'item', unitLabel:'sandwich', baseAmount:1, cal:530, p:28, c:45, f:26},
+  {name:'Chocolate milkshake', unitType:'item', unitLabel:'medium', baseAmount:1, cal:530, p:10, c:88, f:15},
+  {name:'Glazed donut', unitType:'item', unitLabel:'donut', baseAmount:1, cal:240, p:3.5, c:26, f:14},
+  {name:'Soft pretzel', unitType:'item', unitLabel:'pretzel', baseAmount:1, cal:340, p:9, c:72, f:2.5},
+  {name:'Nachos with cheese', unitType:'weight', unitLabel:'g', baseAmount:100, cal:300, p:7, c:32, f:17},
+  {name:'Chicken quesadilla', unitType:'item', unitLabel:'quesadilla', baseAmount:1, cal:490, p:24, c:35, f:28},
+  {name:'Chicken caesar wrap', unitType:'item', unitLabel:'wrap', baseAmount:1, cal:480, p:25, c:40, f:24},
+  {name:'Potato chips', unitType:'weight', unitLabel:'g', baseAmount:100, cal:536, p:7, c:53, f:35},
+  {name:'Tortilla chips', unitType:'weight', unitLabel:'g', baseAmount:100, cal:489, p:7, c:63, f:25},
+  {name:'Popcorn, air-popped', unitType:'weight', unitLabel:'g', baseAmount:100, cal:387, p:13, c:78, f:4.5},
+  {name:'Pretzels', unitType:'weight', unitLabel:'g', baseAmount:100, cal:380, p:10, c:79, f:3},
+  {name:'Granola bar', unitType:'item', unitLabel:'bar', baseAmount:1, cal:150, p:3, c:22, f:6},
+  {name:'Protein bar', unitType:'item', unitLabel:'bar', baseAmount:1, cal:220, p:20, c:22, f:8},
+  {name:'Trail mix', unitType:'weight', unitLabel:'g', baseAmount:100, cal:462, p:14, c:44, f:29},
+  {name:'Rice cakes', unitType:'item', unitLabel:'cake', baseAmount:1, cal:35, p:0.7, c:7, f:0.3},
+  {name:'Crackers', unitType:'weight', unitLabel:'g', baseAmount:100, cal:421, p:9, c:68, f:13},
+  {name:'Dark chocolate', unitType:'weight', unitLabel:'g', baseAmount:100, cal:546, p:7.8, c:46, f:31},
+  {name:'Milk chocolate', unitType:'weight', unitLabel:'g', baseAmount:100, cal:535, p:7.7, c:59, f:30},
+  {name:'Gummy bears', unitType:'weight', unitLabel:'g', baseAmount:100, cal:325, p:6.9, c:77, f:0},
+  {name:'Dried mango', unitType:'weight', unitLabel:'g', baseAmount:100, cal:319, p:2.5, c:73, f:1},
+  {name:'Beef jerky', unitType:'weight', unitLabel:'g', baseAmount:100, cal:410, p:33, c:11, f:26},
+  {name:'Edamame', unitType:'weight', unitLabel:'g', baseAmount:100, cal:121, p:11, c:10, f:5},
+  {name:'Carrot', unitType:'item', unitLabel:'carrot', baseAmount:1, cal:25, p:0.6, c:6, f:0.1},
+  {name:'Cauliflower', unitType:'weight', unitLabel:'g', baseAmount:100, cal:25, p:1.9, c:5, f:0.3},
+  {name:'Bell pepper', unitType:'item', unitLabel:'pepper', baseAmount:1, cal:31, p:1, c:7, f:0.3},
+  {name:'Cucumber', unitType:'weight', unitLabel:'g', baseAmount:100, cal:16, p:0.7, c:3.6, f:0.1},
+  {name:'Tomato', unitType:'item', unitLabel:'tomato', baseAmount:1, cal:22, p:1.1, c:4.8, f:0.2},
+  {name:'Zucchini', unitType:'weight', unitLabel:'g', baseAmount:100, cal:17, p:1.2, c:3.1, f:0.3},
+  {name:'Mushroom', unitType:'weight', unitLabel:'g', baseAmount:100, cal:22, p:3.1, c:3.3, f:0.3},
+  {name:'Asparagus', unitType:'weight', unitLabel:'g', baseAmount:100, cal:20, p:2.2, c:3.9, f:0.1},
+  {name:'Kale', unitType:'weight', unitLabel:'g', baseAmount:100, cal:49, p:4.3, c:9, f:0.9},
+  {name:'Brussels sprouts', unitType:'weight', unitLabel:'g', baseAmount:100, cal:43, p:3.4, c:9, f:0.3},
+  {name:'Corn on the cob', unitType:'item', unitLabel:'ear', baseAmount:1, cal:88, p:3.3, c:19, f:1.3},
+  {name:'Green beans', unitType:'weight', unitLabel:'g', baseAmount:100, cal:31, p:1.8, c:7, f:0.2},
+  {name:'Cabbage', unitType:'weight', unitLabel:'g', baseAmount:100, cal:25, p:1.3, c:6, f:0.1},
+  {name:'Eggplant', unitType:'weight', unitLabel:'g', baseAmount:100, cal:25, p:1, c:6, f:0.2},
+  {name:'Onion', unitType:'item', unitLabel:'onion', baseAmount:1, cal:44, p:1.2, c:10, f:0.1},
+  {name:'Almond milk, unsweetened', unitType:'weight', unitLabel:'ml', baseAmount:100, cal:15, p:0.6, c:0.6, f:1.2},
+  {name:'Soy milk', unitType:'weight', unitLabel:'ml', baseAmount:100, cal:43, p:3.3, c:1.8, f:2.2},
+  {name:'Oat milk', unitType:'weight', unitLabel:'ml', baseAmount:100, cal:47, p:1, c:7.5, f:1.5},
+  {name:'Vanilla ice cream', unitType:'weight', unitLabel:'g', baseAmount:100, cal:207, p:3.5, c:24, f:11},
+  {name:'Mozzarella cheese', unitType:'weight', unitLabel:'g', baseAmount:100, cal:280, p:28, c:3.1, f:17},
+  {name:'Parmesan cheese', unitType:'weight', unitLabel:'g', baseAmount:100, cal:431, p:38, c:4.1, f:29},
+  {name:'Feta cheese', unitType:'weight', unitLabel:'g', baseAmount:100, cal:264, p:14, c:4, f:21},
+  {name:'Cream cheese', unitType:'weight', unitLabel:'g', baseAmount:100, cal:342, p:6, c:4, f:34},
+  {name:'Sour cream', unitType:'weight', unitLabel:'g', baseAmount:100, cal:198, p:2.4, c:4.6, f:19},
+  {name:'Pinto beans, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:143, p:9, c:26, f:0.7},
+  {name:'Kidney beans, cooked', unitType:'weight', unitLabel:'g', baseAmount:100, cal:127, p:8.7, c:22.8, f:0.5},
+  {name:'Cashews', unitType:'weight', unitLabel:'g', baseAmount:100, cal:553, p:18, c:30, f:44},
+  {name:'Pistachios', unitType:'weight', unitLabel:'g', baseAmount:100, cal:560, p:20, c:28, f:45},
+  {name:'Pecans', unitType:'weight', unitLabel:'g', baseAmount:100, cal:691, p:9.2, c:14, f:72},
+  {name:'Sunflower seeds', unitType:'weight', unitLabel:'g', baseAmount:100, cal:584, p:21, c:20, f:51},
+  {name:'Chia seeds', unitType:'weight', unitLabel:'g', baseAmount:100, cal:486, p:17, c:42, f:31},
+  {name:'Flaxseed', unitType:'weight', unitLabel:'g', baseAmount:100, cal:534, p:18, c:29, f:42},
+  {name:'Orange juice', unitType:'weight', unitLabel:'ml', baseAmount:100, cal:45, p:0.7, c:10, f:0.2},
+  {name:'Apple juice', unitType:'weight', unitLabel:'ml', baseAmount:100, cal:46, p:0.1, c:11, f:0.1},
+  {name:'Cola', unitType:'weight', unitLabel:'ml', baseAmount:100, cal:42, p:0, c:10.6, f:0},
+  {name:'Beer', unitType:'weight', unitLabel:'ml', baseAmount:100, cal:43, p:0.5, c:3.6, f:0},
+  {name:'Red wine', unitType:'weight', unitLabel:'ml', baseAmount:100, cal:85, p:0.1, c:2.6, f:0},
+  {name:'Black coffee', unitType:'weight', unitLabel:'ml', baseAmount:100, cal:2, p:0.3, c:0, f:0},
+  {name:'Latte, whole milk', unitType:'weight', unitLabel:'ml', baseAmount:100, cal:60, p:3.2, c:4.8, f:3.3},
+  {name:'Energy drink', unitType:'weight', unitLabel:'ml', baseAmount:100, cal:45, p:0, c:11, f:0},
+  {name:'Sports drink', unitType:'weight', unitLabel:'ml', baseAmount:100, cal:24, p:0, c:6, f:0},
+  {name:'Mixed berry smoothie', unitType:'weight', unitLabel:'ml', baseAmount:100, cal:70, p:1.2, c:16, f:0.5},
+  {name:'Pancake', unitType:'item', unitLabel:'pancake', baseAmount:1, cal:175, p:4.7, c:22, f:7.8},
+  {name:'Waffle', unitType:'item', unitLabel:'waffle', baseAmount:1, cal:218, p:5.9, c:25, f:10.6},
+  {name:'French toast', unitType:'item', unitLabel:'slice', baseAmount:1, cal:149, p:5.4, c:16, f:6.5},
+  {name:'Bagel, plain', unitType:'item', unitLabel:'bagel', baseAmount:1, cal:289, p:11, c:56, f:1.7},
+  {name:'Blueberry muffin', unitType:'item', unitLabel:'muffin', baseAmount:1, cal:340, p:5, c:54, f:12},
+  {name:'Granola', unitType:'weight', unitLabel:'g', baseAmount:100, cal:471, p:10, c:64, f:20},
+  {name:'Yogurt parfait with granola', unitType:'weight', unitLabel:'g', baseAmount:100, cal:150, p:6, c:20, f:5}
+];
+
+let FOOD_DB = [];
+
+function computeGoalsFromBio(bio){
+  const sexConst = bio.gender==='male' ? 5 : -161;
+  const bmr = 10*bio.weight + 6.25*bio.height - 5*bio.age + sexConst;
+  const activityMult = ACTIVITY_MULTIPLIERS[bio.activity] || ACTIVITY_MULTIPLIERS.moderate;
+  const tdee = bmr*activityMult;
+  const adjustment = bio.goal==='maintain' ? 0 : (bio.rate||0)*RATE_KCAL_PER_KG_WEEK;
+  let calories = tdee;
+  if(bio.goal==='lose') calories = tdee-adjustment;
+  if(bio.goal==='bulk') calories = tdee+adjustment;
+  const proteinG = bio.weight*1.8;
+  const proteinCal = proteinG*4;
+  const fatCal = calories*0.25;
+  const fatG = fatCal/9;
+  const carbCal = Math.max(0, calories-proteinCal-fatCal);
+  const carbG = carbCal/4;
+  return {
+    calories:Math.round(calories),
+    protein:Math.round(proteinG),
+    carbs:Math.round(carbG),
+    fat:Math.round(fatG),
+    bmr:Math.round(bmr),
+    tdee:Math.round(tdee),
+    adjustment:Math.round(adjustment)
+  };
+}
+
+const QUESTS = [
+  {id:'earlyRiser', title:'Early Riser', desc:'Log a Breakfast before 10:00 AM', exp:15, icon:'☀',
+    check:()=>todaysMeals().some(m=>m.category==='breakfast' && m.time && m.time<'10:00')},
+  {id:'nightOwl', title:'Night Owl', desc:'Stay within your calorie goal through 9:00 PM', exp:20, icon:'🌙',
+    check:()=>{
+      if(new Date().getHours()<21) return false;
+      const totals = sumMacros(todaysMeals());
+      return totals.calories>0 && totals.calories<=state.goals.calories;
+    }},
+  {id:'threeSquare', title:'Three Square Meals', desc:'Log Breakfast, Lunch and Dinner in one day', exp:15, icon:'🍽',
+    check:()=>{
+      const cats = new Set(todaysMeals().map(m=>m.category));
+      return cats.has('breakfast') && cats.has('lunch') && cats.has('dinner');
+    }},
+  {id:'proteinTarget', title:'Protein Target', desc:'Hit your daily protein goal', exp:15, icon:'💪',
+    check:()=>sumMacros(todaysMeals()).protein>=state.goals.protein},
+  {id:'detailedLogger', title:'Detailed Logger', desc:'Log 4 or more food items in a day', exp:10, icon:'📋',
+    check:()=>todaysMeals().reduce((a,m)=>a+m.items.length,0)>=4}
+];
+
+let state = {
+  skills:{nutrition:0},
+  bio:null,
+  goals:{...FALLBACK_GOALS},
+  bonusDates:[],
+  completedQuests:[],
+  meals:[]
+};
+
+let lastKnownDate = todayStr();
+
+let draftItems = [];
+let draftCategory = null;
+let editingMealId = null;
+let editingMealDate = null;
+let pendingFood = null;
+let onboardingForced = false;
+
+function fmtDate(d){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function fmtTime(d){
+  const h=String(d.getHours()).padStart(2,'0');
+  const m=String(d.getMinutes()).padStart(2,'0');
+  return `${h}:${m}`;
+}
+function todayStr(){return fmtDate(new Date());}
+function uid(){return Math.random().toString(36).slice(2,10);}
+
+function levelInfo(exp){
+  let level=1, remaining=exp, cost=100;
+  while(remaining>=cost){remaining-=cost; level++; cost=100*level;}
+  return {level, current:remaining, needed:cost};
+}
+function titleForLevel(l){
+  if(l<3) return 'Novice Nourisher';
+  if(l<6) return 'Apprentice Nourisher';
+  if(l<10) return 'Adept Nourisher';
+  if(l<15) return 'Expert Nourisher';
+  if(l<20) return 'Master Nourisher';
+  return 'Legendary Nourisher';
+}
+
+function migrateMeal(m){
+  if(m.items) return m;
+  return {
+    id:m.id||uid(),
+    date:m.date||todayStr(),
+    time:m.time||'12:00',
+    category:'snack',
+    items:[{
+      id:uid(), foodName:m.name||'Logged item', unitType:'weight', unitLabel:'g',
+      qty:100, cal:m.calories||0, p:m.protein||0, c:m.carbs||0, f:m.fat||0
+    }]
+  };
+}
+
+function logFirebaseError(context, e){
+  console.error(`[${context}] Firebase error`, {code:e && e.code, message:e && e.message, error:e});
+  if(e && e.code==='permission-denied'){
+    console.error(`[${context}] This is almost always caused by Firestore Security Rules blocking the request. Open the Firebase console for project "${firebaseConfig.projectId}", go to Firestore Database > Rules, and confirm authenticated users are allowed to read/write the "foods", "meta", and "users" collections.`);
+  }
+  if(e && e.code==='unavailable'){
+    console.error(`[${context}] Firestore reported the backend as unavailable. This usually means a network/connectivity issue reaching Firestore.`);
+  }
+}
+
+async function ensureFoodsSeeded(){
+  try{
+    const markerRef = db.collection('meta').doc('foodsSeeded');
+    const markerSnap = await markerRef.get();
+    if(markerSnap.exists){
+      console.log('Foods already seeded, skipping seed step');
+      return true;
+    }
+    const batch = db.batch();
+    SEED_FOOD_DB.forEach(food=>{
+      const ref = db.collection('foods').doc();
+      batch.set(ref, food);
+    });
+    batch.set(markerRef, {seeded:true, count:SEED_FOOD_DB.length, seededAt:firebase.firestore.FieldValue.serverTimestamp()});
+    await batch.commit();
+    console.log('Database seeded successfully', SEED_FOOD_DB.length, 'items');
+    return true;
+  }catch(e){
+    logFirebaseError('ensureFoodsSeeded', e);
+    return false;
+  }
+}
+
+async function loadGlobalFoods(){
+  try{
+    const snap = await db.collection('foods').get();
+    const foods = snap.docs.map(d=>({id:d.id, ...d.data(), isCustom:false}));
+    console.log('Foods loaded from Firestore', foods.length);
+    return foods;
+  }catch(e){
+    logFirebaseError('loadGlobalFoods', e);
+    return [];
+  }
+}
+
+async function loadCustomFoods(uid){
+  try{
+    const snap = await db.collection('users').doc(uid).collection('customFoods').get();
+    const foods = snap.docs.map(d=>({id:d.id, ...d.data(), isCustom:true}));
+    console.log('Custom foods loaded', foods.length);
+    return foods;
+  }catch(e){
+    logFirebaseError('loadCustomFoods', e);
+    return [];
+  }
+}
+
+async function addCustomFood(food){
+  const ref = await db.collection('users').doc(currentUser.uid).collection('customFoods').add(food);
+  const saved = {id:ref.id, ...food, isCustom:true};
+  FOOD_DB.push(saved);
+  return saved;
+}
+
+async function loadUserDoc(uid){
+  try{
+    const ref = db.collection('users').doc(uid);
+    const snap = await ref.get();
+    if(snap.exists){
+      const data = snap.data();
+      state.skills = data.skills || {nutrition:0};
+      state.bio = data.bio || null;
+      state.goals = data.goals || (state.bio ? computeGoalsFromBio(state.bio) : {...FALLBACK_GOALS});
+      state.bonusDates = data.bonusDates || [];
+      state.completedQuests = data.completedQuests || [];
+      state.meals = (data.meals || []).map(migrateMeal);
+    } else {
+      state.skills = {nutrition:0};
+      state.bio = null;
+      state.goals = {...FALLBACK_GOALS};
+      state.bonusDates = [];
+      state.completedQuests = [];
+      state.meals = [];
+      await ref.set({
+        skills:state.skills, bio:null, goals:state.goals,
+        bonusDates:[], completedQuests:[], meals:[]
+      });
+    }
+  }catch(e){
+    logFirebaseError('loadUserDoc', e);
+    throw e;
+  }
+}
+async function saveProfile(){
+  if(!currentUser) return;
+  try{
+    await db.collection('users').doc(currentUser.uid).set({
+      skills:state.skills, bio:state.bio, goals:state.goals, bonusDates:state.bonusDates, completedQuests:state.completedQuests
+    }, {merge:true});
+  }catch(e){
+    logFirebaseError('saveProfile', e);
+  }
+}
+async function saveMeals(){
+  if(!currentUser) return;
+  try{
+    await db.collection('users').doc(currentUser.uid).set({meals:state.meals}, {merge:true});
+  }catch(e){
+    logFirebaseError('saveMeals', e);
+  }
+}
+
+function totalEXP(){
+  return Object.values(state.skills).reduce((a,b)=>a+b,0);
+}
+
+function showToast(html){
+  const stack = document.getElementById('toastStack');
+  const el = document.createElement('div');
+  el.className='toast';
+  el.innerHTML = html;
+  stack.appendChild(el);
+  setTimeout(()=>{el.style.transition='opacity .3s';el.style.opacity='0';setTimeout(()=>el.remove(),320);}, 3200);
+}
+
+async function addSkillEXP(skill, amount){
+  const before = levelInfo(totalEXP()).level;
+  const beforeSkillLv = levelInfo(state.skills[skill]||0).level;
+  state.skills[skill] = (state.skills[skill]||0) + amount;
+  const after = levelInfo(totalEXP()).level;
+  const afterSkillLv = levelInfo(state.skills[skill]).level;
+  if(afterSkillLv>beforeSkillLv){
+    showToast(`<b>Level up!</b><br>Nutrition reached Lv ${afterSkillLv}`);
+  }
+  if(after>before){
+    showToast(`<b>Character level up!</b><br>You reached Lv ${after}`);
+  }
+  await saveProfile();
+}
+
+function mealTotals(meal){
+  return (meal.items||[]).reduce((acc,it)=>{
+    acc.calories+=Number(it.cal)||0;
+    acc.protein+=Number(it.p)||0;
+    acc.carbs+=Number(it.c)||0;
+    acc.fat+=Number(it.f)||0;
+    return acc;
+  },{calories:0,protein:0,carbs:0,fat:0});
+}
+function sumMacros(meals){
+  return meals.reduce((acc,m)=>{
+    const t = mealTotals(m);
+    acc.calories+=t.calories; acc.protein+=t.protein; acc.carbs+=t.carbs; acc.fat+=t.fat;
+    return acc;
+  },{calories:0,protein:0,carbs:0,fat:0});
+}
+function todaysMeals(){
+  const t = todayStr();
+  return state.meals.filter(m=>m.date===t);
+}
+
+function calcStreak(){
+  const days = new Set(state.meals.map(m=>m.date));
+  let cursor = new Date();
+  if(!days.has(fmtDate(cursor))){cursor.setDate(cursor.getDate()-1);}
+  let streak=0;
+  while(days.has(fmtDate(cursor))){streak++; cursor.setDate(cursor.getDate()-1);}
+  return streak;
+}
+
+async function checkDailyBonus(){
+  if(!currentUser) return;
+  const today = todayStr();
+  if(state.bonusDates.includes(today)) return;
+  const totals = sumMacros(todaysMeals());
+  const target = state.goals.calories;
+  if(totals.calories>0 && totals.calories>=target*0.9 && totals.calories<=target*1.1){
+    state.bonusDates.push(today);
+    await addSkillEXP('nutrition', 40);
+    showToast(`<b>Goal hit!</b><br>+40 EXP bonus for today`);
+  }
+}
+
+async function checkDailyQuests(){
+  if(!currentUser) return;
+  const today = todayStr();
+  let anyCompleted = false;
+  for(const q of QUESTS){
+    const key = `${today}::${q.id}`;
+    if(state.completedQuests.includes(key)) continue;
+    if(q.check()){
+      state.completedQuests.push(key);
+      anyCompleted = true;
+      await addSkillEXP('nutrition', q.exp);
+      showToast(`<b>Quest complete!</b><br>${q.title} +${q.exp} EXP`);
+    }
+  }
+  if(anyCompleted){
+    await saveProfile();
+    renderQuestsPanel();
+    renderCharacterPanel();
+  }
+}
+
+function nextMidnight(){
+  const d = new Date();
+  d.setHours(24,0,0,0);
+  return d;
+}
+
+function renderResetCountdown(){
+  const el = document.getElementById('resetCountdown');
+  if(!el) return;
+  const ms = nextMidnight()-new Date();
+  const h = Math.floor(ms/3600000);
+  const m = Math.floor((ms%3600000)/60000);
+  const s = Math.floor((ms%60000)/1000);
+  el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function currentCategoryBucket(){
+  const h = new Date().getHours();
+  if(h<11) return 'breakfast';
+  if(h<16) return 'lunch';
+  if(h<21) return 'dinner';
+  return 'snack';
+}
+
+function buildFoodHistory(){
+  const groups = {};
+  state.meals.forEach(meal=>{
+    (meal.items||[]).forEach(it=>{
+      const key = (it.foodName||'').trim().toLowerCase();
+      if(!key) return;
+      if(!groups[key]) groups[key] = {name:it.foodName.trim(), count:0, qtySum:0, calSum:0, pSum:0, cSum:0, fSum:0};
+      const g = groups[key];
+      g.count++;
+      g.qtySum += Number(it.qty)||0;
+      g.calSum += Number(it.cal)||0;
+      g.pSum += Number(it.p)||0;
+      g.cSum += Number(it.c)||0;
+      g.fSum += Number(it.f)||0;
+    });
+  });
+  return Object.values(groups).map(g=>({
+    name:g.name, count:g.count,
+    avgQty:g.qtySum/g.count, avgCal:g.calSum/g.count,
+    avgP:g.pSum/g.count, avgC:g.cSum/g.count, avgF:g.fSum/g.count
+  })).sort((a,b)=>b.count-a.count);
+}
+
+function buildMealComboHistory(){
+  const groups = {};
+  state.meals.forEach(meal=>{
+    if(!meal.items || meal.items.length===0) return;
+    const sig = meal.category+'::'+meal.items.map(i=>i.foodName.toLowerCase()).sort().join('|');
+    if(!groups[sig]){
+      groups[sig] = {category:meal.category, count:0, totalsSum:{calories:0,protein:0,carbs:0,fat:0}, itemQty:{}};
+    }
+    const g = groups[sig];
+    g.count++;
+    const t = mealTotals(meal);
+    g.totalsSum.calories += t.calories;
+    g.totalsSum.protein += t.protein;
+    g.totalsSum.carbs += t.carbs;
+    g.totalsSum.fat += t.fat;
+    meal.items.forEach(it=>{
+      if(!g.itemQty[it.foodName]) g.itemQty[it.foodName] = {sum:0, unitType:it.unitType, unitLabel:it.unitLabel};
+      g.itemQty[it.foodName].sum += Number(it.qty)||0;
+    });
+  });
+  return Object.values(groups).map(g=>({
+    category:g.category,
+    count:g.count,
+    avgCal:g.totalsSum.calories/g.count,
+    avgP:g.totalsSum.protein/g.count,
+    avgC:g.totalsSum.carbs/g.count,
+    avgF:g.totalsSum.fat/g.count,
+    items:Object.entries(g.itemQty).map(([name,v])=>({
+      name, avgQty:v.sum/g.count, unitType:v.unitType, unitLabel:v.unitLabel
+    }))
+  })).sort((a,b)=>b.count-a.count);
+}
+
+function roundQty(unitType, qty){
+  if(unitType==='weight') return Math.max(5, Math.round(qty/5)*5);
+  return Math.max(1, Math.round(qty*2)/2);
+}
+
+function computeComboRecommendation(){
+  const combos = buildMealComboHistory();
+  const totals = sumMacros(todaysMeals());
+  const remaining = {
+    calories: state.goals.calories-totals.calories,
+    protein: state.goals.protein-totals.protein,
+    carbs: state.goals.carbs-totals.carbs,
+    fat: state.goals.fat-totals.fat
+  };
+  if(remaining.calories<=50) return {remaining, combo:null};
+  const category = currentCategoryBucket();
+  let candidates = combos.filter(c=>c.category===category);
+  if(candidates.length===0) return {remaining, combo:null, category};
+  candidates.sort((a,b)=>b.count-a.count || Math.abs(a.avgCal-remaining.calories)-Math.abs(b.avgCal-remaining.calories));
+  const best = candidates[0];
+  const factor = Math.max(0.5, Math.min(2, remaining.calories/Math.max(best.avgCal,1)));
+  const scaledItems = best.items.map(it=>{
+    const food = FOOD_DB.find(f=>f.name.toLowerCase()===it.name.toLowerCase());
+    const scaledQty = roundQty(it.unitType, it.avgQty*factor);
+    if(food){
+      const unitFactor = scaledQty/food.baseAmount;
+      return {name:it.name, unitType:it.unitType, unitLabel:it.unitLabel, qty:scaledQty,
+        cal:food.cal*unitFactor, p:food.p*unitFactor, c:food.c*unitFactor, f:food.f*unitFactor};
+    }
+    return {name:it.name, unitType:it.unitType, unitLabel:it.unitLabel, qty:scaledQty, cal:0,p:0,c:0,f:0};
+  });
+  const totalsScaled = scaledItems.reduce((acc,i)=>{
+    acc.calories+=i.cal; acc.protein+=i.p; acc.carbs+=i.c; acc.fat+=i.f; return acc;
+  },{calories:0,protein:0,carbs:0,fat:0});
+  return {remaining, category, combo:{category:best.category, items:scaledItems, totals:totalsScaled, factor}};
+}
+
+function gaugeCard(label, current, target, colorVar, glowVar, unit){
+  const pct = target>0 ? Math.min(100,(current/target)*100) : 0;
+  const over = current>target;
+  return `
+    <div class="macro-card">
+      <div class="macro-card-head">
+        <span class="mname">${label}</span>
+        <span class="mval">${Math.round(current)}<small>/${Math.round(target)}${unit}</small></span>
+      </div>
+      <div class="gauge"><div class="gauge-fill ${pct>=100?'full':''}" style="width:${pct}%;--fill-color:${over?'var(--danger)':colorVar};--fill-glow:${glowVar};"></div></div>
+    </div>`;
+}
+
+function renderMacroGauges(){
+  const totals = sumMacros(todaysMeals());
+  const g = state.goals;
+  document.getElementById('macroGauges').innerHTML =
+    gaugeCard('Calories', totals.calories, g.calories, 'var(--gold)', 'rgba(232,185,74,.5)', '') +
+    gaugeCard('Protein', totals.protein, g.protein, 'var(--crimson)', 'rgba(216,101,122,.5)', 'g') +
+    gaugeCard('Carbs', totals.carbs, g.carbs, 'var(--teal)', 'rgba(79,182,201,.5)', 'g') +
+    gaugeCard('Fat', totals.fat, g.fat, 'var(--violet)', 'rgba(167,139,235,.5)', 'g');
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function formatQty(unitType, unitLabel, qty){
+  const rounded = unitType==='weight' ? Math.round(qty) : Math.round(qty*2)/2;
+  if(unitType==='weight') return `${rounded}g`;
+  return `${rounded} ${unitLabel}${rounded===1?'':'s'}`;
+}
+
+function renderRecoPanel(){
+  const panel = document.getElementById('recoPanel');
+  const history = buildFoodHistory();
+  const loggedCount = state.meals.length;
+  const distinctCount = history.length;
+  if(loggedCount<MIN_MEALS_FOR_RECS || distinctCount<MIN_DISTINCT_FOODS){
+    const pct = Math.min(100, Math.round((loggedCount/MIN_MEALS_FOR_RECS)*100));
+    panel.innerHTML = `
+      <div class="panel-title">Recommendation Engine</div>
+      <div class="banner">
+        <div class="banner-title">Learning your habits</div>
+        <p>Log a few more meals so the engine can learn your usual combos, portions and timing. Once it knows your patterns, it'll suggest a whole meal matching what you typically eat.</p>
+        <div class="miniprogress"><div class="miniprogress-fill" style="width:${pct}%;"></div></div>
+        <div class="miniprogress-label">${loggedCount} / ${MIN_MEALS_FOR_RECS} meals logged</div>
+      </div>`;
+    return;
+  }
+  const {remaining, category, combo} = computeComboRecommendation();
+  if(remaining.calories<=50){
+    panel.innerHTML = `
+      <div class="panel-title">Recommendation Engine</div>
+      <div class="banner">
+        <div class="banner-title">You're at today's target</div>
+        <p>Remaining calorie budget is under 50 kcal, so there's no meal to suggest right now. Nice work closing out the day.</p>
+      </div>`;
+    return;
+  }
+  if(!combo){
+    const catLabel = CATEGORY_META[category] ? CATEGORY_META[category].label : 'this meal';
+    panel.innerHTML = `
+      <div class="panel-title">Recommendation Engine</div>
+      <div class="banner">
+        <div class="banner-title">No repeated ${catLabel.toLowerCase()} yet</div>
+        <p>You haven't logged a repeated combo for ${catLabel} yet. Keep logging and the engine will start suggesting your usual meal for this time of day.</p>
+      </div>`;
+    return;
+  }
+  const catMeta = CATEGORY_META[combo.category];
+  panel.innerHTML = `
+    <div class="panel-title">Recommendation Engine</div>
+    <div class="reco-card">
+      <div class="reco-eyebrow">Suggested · ${catMeta.label}</div>
+      <div class="reco-name">Your usual ${catMeta.label.toLowerCase()}</div>
+      <div class="reco-sub">~${combo.factor.toFixed(2)}x your usual portions · fits ${Math.round(remaining.calories)} kcal remaining</div>
+      <ul class="reco-itemlist">
+        ${combo.items.map(i=>`<li><span>${escapeHtml(i.name)}</span><b>${formatQty(i.unitType,i.unitLabel,i.qty)}</b></li>`).join('')}
+      </ul>
+      <div class="reco-macros">
+        <span>Cal <b>${Math.round(combo.totals.calories)}</b></span>
+        <span>Protein <b>${Math.round(combo.totals.protein)}g</b></span>
+        <span>Carbs <b>${Math.round(combo.totals.carbs)}g</b></span>
+        <span>Fat <b>${Math.round(combo.totals.fat)}g</b></span>
+      </div>
+      <button class="btn btn-primary" id="logRecoBtn">Log this meal</button>
+    </div>`;
+  document.getElementById('logRecoBtn').onclick = ()=>logRecommendedCombo(combo);
+}
+
+async function logRecommendedCombo(combo){
+  const now = new Date();
+  const meal = {
+    id:uid(), date:todayStr(), time:fmtTime(now), category:combo.category,
+    items:combo.items.map(i=>({
+      id:uid(), foodName:i.name, unitType:i.unitType, unitLabel:i.unitLabel,
+      qty:i.qty, cal:i.cal, p:i.p, c:i.c, f:i.f
+    }))
+  };
+  state.meals.push(meal);
+  await saveMeals();
+  await addSkillEXP('nutrition', 8);
+  await checkDailyBonus();
+  await checkDailyQuests();
+  renderAll();
+}
+
+function renderMealList(){
+  const meals = todaysMeals().slice().sort((a,b)=>a.time.localeCompare(b.time));
+  const list = document.getElementById('mealList');
+  document.getElementById('mealCountLabel').textContent = meals.length ? ` · ${meals.length}` : '';
+  if(meals.length===0){
+    list.innerHTML = `<div class="empty-note">No meals logged today yet. Start your streak below.</div>`;
+    return;
+  }
+  list.innerHTML = meals.map(m=>{
+    const t = mealTotals(m);
+    const meta = CATEGORY_META[m.category] || CATEGORY_META.snack;
+    return `
+    <div class="mealcard" data-id="${m.id}">
+      <div class="mealcard-head">
+        <span class="mealcard-catbadge" style="color:${meta.color};border-color:${meta.color};">${meta.label}</span>
+        <span class="mealcard-time">${m.time}</span>
+        <span class="mealcard-macros">${Math.round(t.calories)} kcal · ${Math.round(t.protein)}p ${Math.round(t.carbs)}c ${Math.round(t.fat)}f</span>
+      </div>
+      <button class="mealcard-toggle" data-toggle="${m.id}">▸ ${m.items.length} item${m.items.length===1?'':'s'}</button>
+      <ul class="mealcard-items" id="items-${m.id}">
+        ${m.items.map(it=>`<li><span>${escapeHtml(it.foodName)} — ${formatQty(it.unitType,it.unitLabel,it.qty)}</span><b>${Math.round(it.cal)} kcal</b></li>`).join('')}
+      </ul>
+      <div class="mealcard-actions">
+        <button class="btn btn-sm" data-edit="${m.id}">Edit</button>
+        <button class="btn btn-sm btn-danger-ghost" data-del="${m.id}">Remove</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('[data-toggle]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = btn.dataset.toggle;
+      const items = document.getElementById(`items-${id}`);
+      const showing = items.classList.toggle('show');
+      const meal = meals.find(m=>m.id===id);
+      btn.textContent = `${showing?'▾':'▸'} ${meal.items.length} item${meal.items.length===1?'':'s'}`;
+    };
+  });
+  list.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.onclick = async ()=>{
+      state.meals = state.meals.filter(m=>m.id!==btn.dataset.del);
+      await saveMeals();
+      await checkDailyQuests();
+      renderAll();
+    };
+  });
+  list.querySelectorAll('[data-edit]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const meal = state.meals.find(m=>m.id===btn.dataset.edit);
+      if(meal) openLogModal(meal);
+    };
+  });
+}
+
+function renderCharacterPanel(){
+  const total = totalEXP();
+  const li = levelInfo(total);
+  document.getElementById('charLevelNum').textContent = li.level;
+  document.getElementById('charExpText').textContent = `${li.current} / ${li.needed} EXP`;
+  document.getElementById('charExpFill').style.width = `${Math.round((li.current/li.needed)*100)}%`;
+  const title = titleForLevel(li.level);
+  document.getElementById('charTitle').textContent = title;
+  document.getElementById('charTitleSmall').textContent = title;
+
+  const nutriExp = state.skills.nutrition||0;
+  const nli = levelInfo(nutriExp);
+  document.getElementById('nutriExpText').textContent = `Lv ${nli.level} · ${nli.current}/${nli.needed}`;
+  document.getElementById('nutriExpFill').style.width = `${Math.round((nli.current/nli.needed)*100)}%`;
+
+  document.getElementById('statMealsLogged').textContent = state.meals.length;
+  const streak = calcStreak();
+  document.getElementById('statStreak').textContent = `${streak} day${streak===1?'':'s'}`;
+  const totals = sumMacros(todaysMeals());
+  const g = state.goals;
+  let status = 'In progress';
+  if(totals.calories===0) status='Not started';
+  else if(totals.calories>=g.calories*0.9 && totals.calories<=g.calories*1.1) status='On target';
+  else if(totals.calories>g.calories*1.1) status='Over budget';
+  document.getElementById('statGoalStatus').textContent = status;
+
+  const wgRow = document.getElementById('statWeightGoalRow');
+  if(state.bio && state.bio.targetWeight){
+    wgRow.style.display = '';
+    document.getElementById('statWeightGoal').textContent = `${state.bio.weight}kg → ${state.bio.targetWeight}kg`;
+  } else {
+    wgRow.style.display = 'none';
+  }
+}
+
+function renderTopbar(){
+  const d = new Date();
+  document.getElementById('dateChip').textContent = d.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'});
+}
+
+function renderQuestsPanel(){
+  const panel = document.getElementById('questsPanel');
+  const today = todayStr();
+  const streak = calcStreak();
+  const hasLoggedToday = todaysMeals().length>0;
+  panel.innerHTML = `
+    <div class="panel-title">Daily Quests</div>
+    <div class="streakblock">
+      <div>
+        <div class="streak-num">🔥 ${streak}</div>
+        <div class="streak-label">day streak ${hasLoggedToday?'· secured today':'· log something to keep it'}</div>
+      </div>
+      <div class="reset-timer">
+        <span id="resetCountdown">00:00:00</span>
+        <small>until daily reset</small>
+      </div>
+    </div>
+    ${QUESTS.map(q=>{
+      const done = state.completedQuests.includes(`${today}::${q.id}`);
+      return `
+      <div class="questcard ${done?'done':''}">
+        <div class="questcard-icon">${done?'✓':q.icon}</div>
+        <div class="questcard-body">
+          <div class="questcard-title">${q.title}</div>
+          <div class="questcard-desc">${q.desc}</div>
+        </div>
+        <div class="questcard-exp">${done?'Complete':'+'+q.exp+' EXP'}</div>
+      </div>`;
+    }).join('')}
+  `;
+  renderResetCountdown();
+}
+
+function renderAll(){
+  renderTopbar();
+  renderCharacterPanel();
+  renderMacroGauges();
+  renderQuestsPanel();
+  renderRecoPanel();
+  renderMealList();
+}
+
+function resetDraft(){
+  draftItems = [];
+  draftCategory = null;
+  editingMealId = null;
+  editingMealDate = null;
+  pendingFood = null;
+}
+
+function updateCategoryButtons(){
+  document.querySelectorAll('.catbtn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.cat===draftCategory);
+  });
+}
+
+function renderDraftItems(){
+  const list = document.getElementById('draftList');
+  const summary = document.getElementById('draftSummary');
+  if(draftItems.length===0){
+    list.innerHTML = `<div class="draft-empty">No items added yet. Search above to add the first one.</div>`;
+    summary.innerHTML = '';
+    return;
+  }
+  list.innerHTML = draftItems.map(it=>`
+    <div class="draftitem" data-id="${it.id}">
+      <span class="draftitem-name">${escapeHtml(it.foodName)}</span>
+      <span class="draftitem-qty">${formatQty(it.unitType,it.unitLabel,it.qty)}</span>
+      <span class="draftitem-macros">${Math.round(it.cal)} kcal</span>
+      <button class="draftitem-del" data-remove="${it.id}" title="Remove">×</button>
+    </div>`).join('');
+  list.querySelectorAll('[data-remove]').forEach(btn=>{
+    btn.onclick = ()=>{
+      draftItems = draftItems.filter(i=>i.id!==btn.dataset.remove);
+      renderDraftItems();
+    };
+  });
+  const t = draftItems.reduce((acc,i)=>{
+    acc.calories+=i.cal; acc.protein+=i.p; acc.carbs+=i.c; acc.fat+=i.f; return acc;
+  },{calories:0,protein:0,carbs:0,fat:0});
+  summary.innerHTML = `
+    <span>Total <b>${Math.round(t.calories)} kcal</b></span>
+    <span>Protein <b>${Math.round(t.protein)}g</b></span>
+    <span>Carbs <b>${Math.round(t.carbs)}g</b></span>
+    <span>Fat <b>${Math.round(t.fat)}g</b></span>`;
+}
+
+function addFoodItemToDraft(food, qty){
+  const factor = qty/food.baseAmount;
+  draftItems.push({
+    id:uid(), foodName:food.name, unitType:food.unitType, unitLabel:food.unitLabel,
+    qty, cal:food.cal*factor, p:food.p*factor, c:food.c*factor, f:food.f*factor
+  });
+  renderDraftItems();
+}
+
+function renderFoodResults(matches){
+  const box = document.getElementById('foodResults');
+  if(matches.length===0){
+    box.innerHTML = `<div class="searchresult-empty">No matches in the food database</div>`;
+    box.classList.add('show');
+    return;
+  }
+  box.innerHTML = matches.map((f,i)=>`
+    <div class="searchresult" data-idx="${i}">
+      <span class="srname">${escapeHtml(f.name)}</span>
+      <span class="srmacros">${f.cal} kcal /${f.unitType==='weight'?'100g':f.unitLabel}</span>
+    </div>`).join('');
+  box.querySelectorAll('.searchresult').forEach(el=>{
+    el.onclick = ()=>selectFood(matches[parseInt(el.dataset.idx,10)]);
+  });
+  box.classList.add('show');
+}
+
+function selectFood(food){
+  pendingFood = food;
+  document.getElementById('foodSearch').value = food.name;
+  document.getElementById('foodResults').classList.remove('show');
+  document.getElementById('qtyRow').style.display = '';
+  document.getElementById('qtyLabel').textContent = food.unitType==='weight' ? 'Serving size (g)' : `Quantity (${food.unitLabel}s)`;
+  document.getElementById('itemQty').value = food.unitType==='weight' ? 100 : 1;
+}
+
+function addPendingItemFromForm(){
+  if(!pendingFood){
+    showToast(`<b>Pick a food first</b><br>Search and select an item to add`);
+    return;
+  }
+  const qty = parseFloat(document.getElementById('itemQty').value);
+  if(!qty || qty<=0){
+    showToast(`<b>Missing quantity</b><br>Enter how much you had`);
+    return;
+  }
+  addFoodItemToDraft(pendingFood, qty);
+  pendingFood = null;
+  document.getElementById('foodSearch').value = '';
+  document.getElementById('qtyRow').style.display = 'none';
+}
+
+function renderFreqChips(){
+  const history = buildFoodHistory().slice(0,6);
+  const row = document.getElementById('freqChips');
+  row.innerHTML = '';
+  history.forEach(h=>{
+    const chip = document.createElement('div');
+    chip.className='chip';
+    chip.textContent = h.name;
+    chip.onclick = ()=>{
+      const food = FOOD_DB.find(f=>f.name.toLowerCase()===h.name.toLowerCase());
+      if(food){
+        const qty = roundQty(food.unitType, h.avgQty || (food.unitType==='weight'?100:1));
+        addFoodItemToDraft(food, qty);
+      }
+    };
+    row.appendChild(chip);
+  });
+}
+
+function openLogModal(meal){
+  document.getElementById('logOverlay').classList.add('show');
+  if(meal){
+    editingMealId = meal.id;
+    editingMealDate = meal.date;
+    draftCategory = meal.category;
+    draftItems = meal.items.map(i=>({...i}));
+    document.getElementById('mTime').value = meal.time;
+    document.getElementById('logModalTitle').textContent = 'Edit meal';
+    document.getElementById('saveLogBtn').textContent = 'Update meal';
+  } else {
+    resetDraft();
+    document.getElementById('mTime').value = fmtTime(new Date());
+    document.getElementById('logModalTitle').textContent = 'Log a meal';
+    document.getElementById('saveLogBtn').textContent = 'Save meal';
+  }
+  pendingFood = null;
+  document.getElementById('foodSearch').value = '';
+  document.getElementById('foodResults').classList.remove('show');
+  document.getElementById('qtyRow').style.display = 'none';
+  updateCategoryButtons();
+  renderDraftItems();
+  renderFreqChips();
+}
+function closeLogModal(){
+  document.getElementById('logOverlay').classList.remove('show');
+}
+
+async function saveMealFromForm(){
+  if(!draftCategory){
+    showToast(`<b>Pick a category</b><br>Choose Breakfast, Lunch, Dinner or Snack`);
+    return;
+  }
+  if(draftItems.length===0){
+    showToast(`<b>Add at least one item</b><br>Search the food database above`);
+    return;
+  }
+  const isNew = !editingMealId;
+  const meal = {
+    id: editingMealId || uid(),
+    date: editingMealId ? editingMealDate : todayStr(),
+    time: document.getElementById('mTime').value || fmtTime(new Date()),
+    category: draftCategory,
+    items: draftItems.map(i=>({...i}))
+  };
+  if(editingMealId){
+    const idx = state.meals.findIndex(m=>m.id===editingMealId);
+    if(idx>=0) state.meals[idx] = meal; else state.meals.push(meal);
+  } else {
+    state.meals.push(meal);
+  }
+  await saveMeals();
+  if(isNew){
+    await addSkillEXP('nutrition', 8);
+  }
+  await checkDailyBonus();
+  await checkDailyQuests();
+  closeLogModal();
+  renderAll();
+}
+
+function readBioForm(){
+  return {
+    age: parseFloat(document.getElementById('bAge').value) || DEFAULT_BIO.age,
+    gender: document.getElementById('bGender').value,
+    height: parseFloat(document.getElementById('bHeight').value) || DEFAULT_BIO.height,
+    weight: parseFloat(document.getElementById('bWeight').value) || DEFAULT_BIO.weight,
+    activity: document.getElementById('bActivity').value,
+    goal: document.getElementById('bGoal').value,
+    rate: parseFloat(document.getElementById('bRate').value) || 0,
+    targetWeight: parseFloat(document.getElementById('bTargetWeight').value) || null
+  };
+}
+
+function refreshRateFieldVisibility(){
+  const goal = document.getElementById('bGoal').value;
+  document.getElementById('rateField').style.display = goal==='maintain' ? 'none' : '';
+}
+
+function refreshCalcSummary(){
+  refreshRateFieldVisibility();
+  const bio = readBioForm();
+  const goals = computeGoalsFromBio(bio);
+  document.getElementById('calcKcal').textContent = `${goals.calories} kcal`;
+  document.getElementById('calcProt').textContent = `${goals.protein}g`;
+  document.getElementById('calcCarb').textContent = `${goals.carbs}g`;
+  document.getElementById('calcFat').textContent = `${goals.fat}g`;
+  const sign = bio.goal==='lose' ? '-' : bio.goal==='bulk' ? '+' : '';
+  const adjText = bio.goal==='maintain' ? 'No adjustment (maintain)' : `${sign}${goals.adjustment} kcal/day`;
+  document.getElementById('calcSub').textContent = `BMR ${goals.bmr} kcal · TDEE ${goals.tdee} kcal · ${adjText}`;
+}
+
+function openSettingsModal(forced){
+  onboardingForced = !!forced;
+  document.getElementById('settingsOverlay').classList.add('show');
+  document.getElementById('cancelSettingsBtn').style.display = onboardingForced ? 'none' : '';
+  const bio = state.bio || DEFAULT_BIO;
+  document.getElementById('bAge').value = bio.age;
+  document.getElementById('bGender').value = bio.gender;
+  document.getElementById('bHeight').value = bio.height;
+  document.getElementById('bWeight').value = bio.weight;
+  document.getElementById('bActivity').value = bio.activity;
+  document.getElementById('bGoal').value = bio.goal;
+  document.getElementById('bRate').value = bio.rate || 0.25;
+  document.getElementById('bTargetWeight').value = bio.targetWeight || DEFAULT_BIO.targetWeight;
+  refreshCalcSummary();
+}
+function closeSettingsModal(){
+  if(onboardingForced) return;
+  document.getElementById('settingsOverlay').classList.remove('show');
+}
+
+async function saveSettingsFromForm(){
+  state.bio = readBioForm();
+  state.goals = computeGoalsFromBio(state.bio);
+  await saveProfile();
+  onboardingForced = false;
+  document.getElementById('settingsOverlay').classList.remove('show');
+  renderAll();
+}
+
+document.getElementById('openLogBtn').onclick = ()=>openLogModal();
+document.getElementById('cancelLogBtn').onclick = closeLogModal;
+document.getElementById('saveLogBtn').onclick = saveMealFromForm;
+document.getElementById('addItemBtn').onclick = addPendingItemFromForm;
+document.getElementById('settingsBtn').onclick = ()=>openSettingsModal(false);
+document.getElementById('cancelSettingsBtn').onclick = closeSettingsModal;
+document.getElementById('saveSettingsBtn').onclick = saveSettingsFromForm;
+document.getElementById('logOverlay').addEventListener('click', e=>{if(e.target.id==='logOverlay') closeLogModal();});
+document.getElementById('settingsOverlay').addEventListener('click', e=>{if(e.target.id==='settingsOverlay' && !onboardingForced) closeSettingsModal();});
+document.getElementById('categoryRow').addEventListener('click', e=>{
+  const btn = e.target.closest('.catbtn');
+  if(!btn) return;
+  draftCategory = btn.dataset.cat;
+  updateCategoryButtons();
+});
+let searchDebounceTimer = null;
+document.getElementById('foodSearch').addEventListener('input', e=>{
+  const query = e.target.value.trim().toLowerCase();
+  pendingFood = null;
+  document.getElementById('qtyRow').style.display = 'none';
+  clearTimeout(searchDebounceTimer);
+  if(query.length===0){
+    document.getElementById('foodResults').classList.remove('show');
+    return;
+  }
+  searchDebounceTimer = setTimeout(()=>{
+    const matches = FOOD_DB.filter(f=>f.name.toLowerCase().includes(query)).slice(0,10);
+    renderFoodResults(matches);
+  }, 120);
+});
+document.addEventListener('click', e=>{
+  const wrap = document.querySelector('.searchwrap');
+  if(wrap && !wrap.contains(e.target)){
+    document.getElementById('foodResults').classList.remove('show');
+  }
+});
+['bAge','bGender','bHeight','bWeight','bActivity','bGoal','bRate','bTargetWeight'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', refreshCalcSummary);
+  document.getElementById(id).addEventListener('change', refreshCalcSummary);
+});
+
+function openCustomFoodModal(){
+  document.getElementById('customFoodOverlay').classList.add('show');
+  document.getElementById('cfName').value = '';
+  document.getElementById('cfUnitType').value = 'weight';
+  document.getElementById('cfBaseAmount').value = 100;
+  document.getElementById('cfUnitLabel').value = 'g';
+  document.getElementById('cfCal').value = '';
+  document.getElementById('cfProt').value = '';
+  document.getElementById('cfCarb').value = '';
+  document.getElementById('cfFat').value = '';
+  refreshCustomFoodUnitFields();
+}
+function closeCustomFoodModal(){
+  document.getElementById('customFoodOverlay').classList.remove('show');
+}
+function refreshCustomFoodUnitFields(){
+  const unitType = document.getElementById('cfUnitType').value;
+  document.getElementById('cfBaseAmountLabel').textContent = unitType==='weight' ? 'Base amount (g)' : 'Base amount (items)';
+  const labelInput = document.getElementById('cfUnitLabel');
+  if(!labelInput.dataset.touched){
+    labelInput.value = unitType==='weight' ? 'g' : '';
+  }
+  document.getElementById('cfBaseAmount').value = unitType==='weight' ? 100 : 1;
+}
+document.getElementById('openCustomFoodBtn').onclick = openCustomFoodModal;
+document.getElementById('cancelCustomFoodBtn').onclick = closeCustomFoodModal;
+document.getElementById('customFoodOverlay').addEventListener('click', e=>{if(e.target.id==='customFoodOverlay') closeCustomFoodModal();});
+document.getElementById('cfUnitType').addEventListener('change', refreshCustomFoodUnitFields);
+document.getElementById('cfUnitLabel').addEventListener('input', e=>{e.target.dataset.touched='1';});
+document.getElementById('saveCustomFoodBtn').onclick = async ()=>{
+  const name = document.getElementById('cfName').value.trim();
+  const unitType = document.getElementById('cfUnitType').value;
+  const baseAmount = parseFloat(document.getElementById('cfBaseAmount').value) || (unitType==='weight'?100:1);
+  const unitLabel = document.getElementById('cfUnitLabel').value.trim() || (unitType==='weight'?'g':'item');
+  const cal = parseFloat(document.getElementById('cfCal').value);
+  const p = parseFloat(document.getElementById('cfProt').value)||0;
+  const c = parseFloat(document.getElementById('cfCarb').value)||0;
+  const f = parseFloat(document.getElementById('cfFat').value)||0;
+  if(!name || isNaN(cal)){
+    showToast(`<b>Missing info</b><br>Add a food name and calories`);
+    return;
+  }
+  const food = {name, unitType, unitLabel, baseAmount, cal, p, c, f};
+  try{
+    const saved = await addCustomFood(food);
+    closeCustomFoodModal();
+    showToast(`<b>Custom food saved</b><br>${saved.name} is ready to log`);
+    selectFood(saved);
+  }catch(e){
+    showToast(`<b>Save failed</b><br>Check your connection and try again`);
+  }
+};
+
+async function bootstrapAfterLogin(){
+  document.getElementById('loadingNote').style.display = '';
+  document.getElementById('appBody').style.display = 'none';
+  try{
+    const seedOk = await ensureFoodsSeeded();
+    const [globalFoods, customFoods] = await Promise.all([
+      loadGlobalFoods(), loadCustomFoods(currentUser.uid)
+    ]);
+    FOOD_DB = globalFoods.concat(customFoods);
+    if(FOOD_DB.filter(f=>!f.isCustom).length===0){
+      console.error('No global foods came back from Firestore even though the seed step reported', seedOk ? 'success' : 'failure', '. Falling back to the local SEED_FOOD_DB so search still works. Check the "foods" collection in the Firebase console and your Firestore Security Rules.');
+      FOOD_DB = SEED_FOOD_DB.map((f,i)=>({id:`local-${i}`, ...f, isCustom:false})).concat(customFoods);
+      showToast(`<b>Using offline food list</b><br>Could not load foods from Firestore, check console for details`);
+    }
+    console.log('FOOD_DB populated', FOOD_DB.length);
+    await loadUserDoc(currentUser.uid);
+    lastKnownDate = todayStr();
+    await checkDailyBonus();
+    await checkDailyQuests();
+    renderAll();
+    if(!state.bio){
+      openSettingsModal(true);
+    }
+  }catch(e){
+    logFirebaseError('bootstrapAfterLogin', e);
+    showToast(`<b>Could not load your data</b><br>Check your connection and refresh`);
+  }
+  document.getElementById('loadingNote').style.display = 'none';
+  document.getElementById('appBody').style.display = '';
+}
+
+
+window.addEventListener('firebaseAuthReady', (e)=>{
+  const user = e.detail.user;
+  if(user){
+    document.getElementById('appRoot').style.display = '';
+    bootstrapAfterLogin();
+  }
+});
+
+
+setInterval(renderResetCountdown, 1000);
+setInterval(async ()=>{
+  if(!currentUser) return;
+  if(todayStr()!==lastKnownDate){
+    lastKnownDate = todayStr();
+    renderAll();
+    return;
+  }
+  await checkDailyQuests();
+}, 30000);
+
+</script>
+</body>
+</html>

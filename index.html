@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life OS — Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Poppins:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<link rel="stylesheet" href="global.css">
+<style>
+.hubgrid{display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:24px;}
+.navcard{
+  background:var(--panel);border:4px solid var(--border);border-radius:var(--radius);
+  padding:28px;box-shadow:0 8px 0 var(--shadow-color);text-decoration:none;color:var(--text);
+  display:block;transition:0.1s ease;
+}
+.navcard:hover{transform:translateY(2px);box-shadow:0 6px 0 var(--shadow-color);}
+.navcard-icon{font-size:36px;margin-bottom:16px;}
+.navcard-title{font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:8px;}
+.navcard-desc{font-size:14px;color:var(--text-muted);font-weight:600;line-height:1.5;}
+.navcard.disabled{opacity:0.5;cursor:not-allowed;pointer-events:none;}
+.navcard-badge{
+  display:inline-block;font-family:var(--font-display);font-size:11px;font-weight:800;
+  text-transform:uppercase;letter-spacing:0.05em;background:var(--panel-3);color:var(--text-muted);
+  padding:4px 12px;border-radius:999px;margin-top:14px;
+}
+</style>
+</head>
+<body>
+<div class="overlay show" id="authOverlay">
+  <div class="modal">
+    <div class="modal-title" id="authTitle">Welcome back</div>
+    <div class="field"><label>Email</label><input type="email" id="authEmail" autocomplete="email"></div>
+    <div class="field"><label>Password</label><input type="password" id="authPassword" autocomplete="current-password"></div>
+    <div class="autherror" id="authError"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-block" id="authSubmitBtn">Log In</button>
+    </div>
+    <div class="authswitch">
+      <span id="authSwitchText">Don't have a character yet?</span>
+      <button type="button" class="authswitch-btn" id="authSwitchBtn">Sign Up</button>
+    </div>
+    <div class="authloading" id="authLoadingNote" style="display:none;">Signing in…</div>
+  </div>
+</div>
+
+<div class="app" id="appRoot" style="display:none;">
+  <div class="topbar">
+    <div class="wordmark">Life OS<span>Hub</span></div>
+    <div class="topbar-right">
+      <div class="icon-btn" id="themeToggleBtn" title="Toggle Theme">☀️</div>
+      <div class="icon-btn" id="signOutBtn" title="Sign out">⏻</div>
+    </div>
+  </div>
+
+  <div class="hubgrid">
+    <a class="navcard" href="calories.html">
+      <div class="navcard-icon">🍽</div>
+      <div class="navcard-title">Calorie Tracker</div>
+      <div class="navcard-desc">Log meals, track macros, level up your Nutrition skill.</div>
+    </a>
+    <div class="navcard disabled">
+      <div class="navcard-icon">✅</div>
+      <div class="navcard-title">Tasks</div>
+      <div class="navcard-desc">Quest-based task management for your day.</div>
+      <div class="navcard-badge">Coming soon</div>
+    </div>
+  </div>
+</div>
+
+<script src="global.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+let authMode = 'login';
+function setAuthMode(mode){
+  authMode = mode;
+  document.getElementById('authTitle').textContent = mode==='login' ? 'Welcome back' : 'Create your character';
+  document.getElementById('authSubmitBtn').textContent = mode==='login' ? 'Log In' : 'Sign Up';
+  document.getElementById('authSwitchText').textContent = mode==='login' ? "Don't have a character yet?" : 'Already have a character?';
+  document.getElementById('authSwitchBtn').textContent = mode==='login' ? 'Sign Up' : 'Log In';
+  document.getElementById('authError').textContent = '';
+}
+function authErrorMessage(e){
+  const code = (e && e.code) || '';
+  if(code.includes('wrong-password') || code.includes('invalid-credential')) return 'Incorrect email or password';
+  if(code.includes('user-not-found')) return 'No account with that email';
+  if(code.includes('email-already-in-use')) return 'An account with that email already exists';
+  if(code.includes('weak-password')) return 'Password should be at least 6 characters';
+  if(code.includes('invalid-email')) return 'Enter a valid email address';
+  if(code.includes('operation-not-supported-in-this-environment') || code.includes('unauthorized-domain')) return 'This domain is not authorized for Firebase Auth. Add it under Authentication > Settings > Authorized domains, and serve the file over http(s):// rather than file://';
+  if(code.includes('network-request-failed')) return 'Network request failed. If you are opening this file directly (file://) rather than through a local server, Firebase Auth will not work; serve it over http(s):// instead.';
+  return (e && e.message) || 'Something went wrong. Try again.';
+}
+document.getElementById('authSwitchBtn').onclick = ()=>setAuthMode(authMode==='login' ? 'signup' : 'login');
+document.getElementById('authSubmitBtn').onclick = async ()=>{
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errEl = document.getElementById('authError');
+  errEl.textContent = '';
+  if(!email || !password){
+    errEl.textContent = 'Enter an email and password';
+    return;
+  }
+  if(!firebaseReady){
+    errEl.textContent = 'Firebase is not configured yet. Add your project keys to firebaseConfig.';
+    return;
+  }
+  document.getElementById('authLoadingNote').style.display = '';
+  document.getElementById('authSubmitBtn').disabled = true;
+  try{
+    if(authMode==='login'){
+      await auth.signInWithEmailAndPassword(email, password);
+    } else {
+      await auth.createUserWithEmailAndPassword(email, password);
+    }
+  }catch(e){
+    console.error(e);
+    errEl.textContent = authErrorMessage(e);
+  }
+  document.getElementById('authLoadingNote').style.display = 'none';
+  document.getElementById('authSubmitBtn').disabled = false;
+};
+
+window.addEventListener('firebaseAuthReady', (e)=>{
+  const {user, firebaseReady, isFileProtocol} = e.detail;
+  if(!firebaseReady){
+    document.getElementById('appRoot').style.display = 'none';
+    document.getElementById('authOverlay').classList.add('show');
+    setAuthMode('login');
+    document.getElementById('authError').textContent = 'Firebase is not configured yet. Add your project keys to firebaseConfig.';
+    return;
+  }
+  if(isFileProtocol){
+    const authErrorEl = document.getElementById('authError');
+    if(!authErrorEl.textContent){
+      authErrorEl.textContent = 'This page is open via file://. Firebase Auth needs http(s)://, so sign in and sign up will fail. Serve this folder with a local server and open it through http://localhost.';
+    }
+  }
+  if(user){
+    document.getElementById('authOverlay').classList.remove('show');
+    document.getElementById('authEmail').value = '';
+    document.getElementById('authPassword').value = '';
+    document.getElementById('appRoot').style.display = '';
+  } else {
+    document.getElementById('appRoot').style.display = 'none';
+    document.getElementById('authOverlay').classList.add('show');
+    setAuthMode('login');
+  }
+});
+</script>
+</body>
+</html>
