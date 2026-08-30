@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workout & Mobility Architect | Life OS</title>
+  <link rel="stylesheet" href="global.css">
+  <style>
+    .page-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:28px;flex-wrap:wrap}
+    .eyebrow{margin:0 0 8px;color:var(--text-muted);font-family:var(--font-display);font-weight:800;font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+    h1,h2,h3,p{margin-top:0}
+    h1,h2,h3{font-family:var(--font-display)}
+    h1{font-size:clamp(32px,6vw,56px);line-height:.98;letter-spacing:-.05em;margin-bottom:12px}
+    h2{font-size:28px;line-height:1.05;margin-bottom:10px}
+    h3{font-size:18px;margin-bottom:8px}
+    .page-heading p{max-width:630px;margin-bottom:0;color:var(--text-muted);font-size:15px;font-weight:600;line-height:1.7}
+    .back-btn{display:inline-flex;align-items:center;gap:10px;text-decoration:none;white-space:nowrap}
+    .back-arrow{font-size:20px;line-height:0}
+    .dashboard-grid{display:grid;grid-template-columns:1.35fr .65fr;gap:24px}
+    .action-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .action-card{min-height:178px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;padding:22px;background:var(--panel-2);border:4px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 6px 0 var(--shadow-color);cursor:pointer;color:var(--text);font:inherit;transition:.1s ease}
+    .action-card:hover{transform:translateY(2px);box-shadow:0 4px 0 var(--shadow-color);background:var(--panel-3)}
+    .action-card:active{transform:translateY(6px);box-shadow:0 0 0 var(--shadow-color)}
+    .action-card.orange{background:var(--orange)}
+    .action-card.teal{background:var(--teal)}
+    .action-card.violet{background:var(--violet)}
+    .action-icon{font-size:32px;line-height:1;margin-bottom:18px}
+    .action-label{font-family:var(--font-display);font-size:17px;font-weight:800;letter-spacing:-.02em}
+    .action-detail{font-size:12px;font-weight:700;opacity:.78;margin-top:8px;line-height:1.5}
+    .card-arrow{align-self:flex-end;font-size:24px;font-weight:900;line-height:1}
+    .streak-card{display:flex;flex-direction:column;justify-content:space-between;background:var(--gold);color:var(--border)}
+    .streak-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .streak-mark{font-size:42px;line-height:1}
+    .streak-number{font-family:var(--font-display);font-size:74px;line-height:.85;font-weight:900;letter-spacing:-.08em}
+    .streak-unit{font-family:var(--font-display);font-size:15px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin-top:12px}
+    .streak-copy{font-size:13px;font-weight:700;line-height:1.5;margin:22px 0 0}
+    .mini-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:18px}
+    .mini-calendar span{height:10px;border:2px solid var(--border);background:rgba(255,255,255,.35)}
+    .mini-calendar span.done{background:var(--teal)}
+    .mini-calendar span.today{background:var(--crimson)}
+    .section-stack{display:grid;gap:24px;margin-top:24px}
+    .section-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+    .section-header .panel-title{margin-bottom:0}
+    .view-label{display:inline-flex;align-items:center;gap:8px;border:3px solid var(--border);border-radius:999px;padding:8px 14px;background:var(--panel-2);font-family:var(--font-display);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+    .view-label span{width:9px;height:9px;border-radius:50%;background:var(--teal);border:2px solid var(--border)}
+    .split-choice{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:24px}
+    .choice-card{position:relative;display:flex;align-items:center;gap:16px;padding:18px;background:var(--panel-2);border:4px solid var(--border);border-radius:var(--radius-sm);color:var(--text);cursor:pointer;text-align:left;box-shadow:0 5px 0 var(--shadow-color)}
+    .choice-card.selected{background:var(--teal)}
+    .choice-card input{accent-color:var(--border);width:18px;height:18px;flex:0 0 auto}
+    .choice-title{display:block;font-family:var(--font-display);font-weight:900;font-size:16px}
+    .choice-copy{display:block;margin-top:4px;font-size:12px;font-weight:600;opacity:.78}
+    .days-row{display:flex;gap:10px;flex-wrap:wrap}
+    .day-chip{display:inline-flex;align-items:center;justify-content:center;width:45px;height:45px;border:3px solid var(--border);border-radius:14px;background:var(--panel-2);font-family:var(--font-display);font-weight:900;cursor:pointer;box-shadow:0 4px 0 var(--shadow-color)}
+    .day-chip.active{background:var(--orange);color:var(--border)}
+    .builder-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:6px 0 18px;flex-wrap:wrap}
+    .builder-toolbar .panel-title{margin:0}
+    .split-list{display:grid;gap:16px}
+    .split-card{background:var(--panel-2);border:4px solid var(--border);border-radius:var(--radius-sm);padding:20px}
+    .split-card-header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+    .split-name{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:900;font-size:20px}
+    .split-index{display:inline-flex;align-items:center;justify-content:center;width:31px;height:31px;border:3px solid var(--border);border-radius:10px;background:var(--violet);font-size:13px}
+    .small-action{border:3px solid var(--border);border-radius:999px;background:var(--panel);padding:9px 14px;color:var(--text);font-family:var(--font-display);font-size:11px;font-weight:900;text-transform:uppercase;cursor:pointer;box-shadow:0 3px 0 var(--shadow-color)}
+    .exercise-list{display:grid;gap:10px}
+    .exercise-row{display:grid;grid-template-columns:minmax(150px,1fr) 80px 80px 42px;align-items:center;gap:10px}
+    .exercise-row input{width:100%;background:var(--panel);border:3px solid var(--border);border-radius:12px;padding:10px 12px;color:var(--text);font-family:var(--font-body);font-weight:700;min-width:0}
+    .exercise-row input::placeholder{color:var(--text-dim)}
+    .remove-btn{width:42px;height:42px;border:3px solid var(--border);border-radius:12px;background:var(--crimson);color:var(--border);font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 var(--crimson-shadow)}
+    .table-head{display:grid;grid-template-columns:minmax(150px,1fr) 80px 80px 42px;gap:10px;padding:0 12px 7px;color:var(--text-muted);font-family:var(--font-display);font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+    .add-row{margin-top:12px}
+    .notice{display:flex;align-items:flex-start;gap:12px;padding:16px 18px;border:4px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:700;line-height:1.5}
+    .notice.warning{background:var(--gold);color:var(--border)}
+    .notice.danger{background:var(--crimson);color:var(--border)}
+    .notice.success{background:var(--mint);color:var(--border)}
+    .notice-icon{font-size:22px;line-height:1}
+    .maximize-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:24px;flex-wrap:wrap}
+    .hidden-state{display:none}
+    .tracker-shell{display:grid;gap:18px}
+    .tracker-header{display:flex;align-items:center;justify-content:space-between;gap:18px;background:var(--panel-2);border:4px solid var(--border);border-radius:var(--radius-sm);padding:18px 20px;flex-wrap:wrap}
+    #tracker-day-select-wrap{display:flex;flex-direction:column;gap:6px}
+    #tracker-day-select{background:var(--panel);border:3px solid var(--border);border-radius:12px;padding:10px 12px;color:var(--text);font-family:var(--font-body);font-weight:700;font-size:13px;box-shadow:0 3px 0 var(--shadow-color);cursor:pointer}
+    .active-badge{display:inline-flex;align-items:center;gap:9px;color:var(--crimson);font-family:var(--font-display);font-weight:900;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+    .active-badge span{width:11px;height:11px;background:var(--crimson);border:3px solid var(--border);border-radius:50%}
+    .timer{font-family:var(--font-mono);font-weight:900;font-size:30px;letter-spacing:.08em}
+    .tracker-exercise{border:4px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--panel-2)}
+    .tracker-exercise-header{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--violet);color:var(--border);padding:16px 18px;flex-wrap:wrap}
+    .tracker-exercise-title{font-family:var(--font-display);font-weight:900;font-size:20px;display:inline-flex;align-items:center;gap:8px}
+    .tracker-name-input{background:transparent;border:none;border-bottom:3px solid transparent;color:inherit;font-family:inherit;font-weight:inherit;font-size:inherit;padding:2px 0;min-width:140px}
+    .tracker-name-input:focus{outline:none;border-bottom:3px solid var(--border)}
+    .tracker-name-input::placeholder{color:inherit;opacity:.65}
+    .set-table{width:100%;border-collapse:collapse}
+    .set-table th,.set-table td{padding:13px 14px;border-bottom:3px solid var(--panel-3);text-align:left;font-size:13px;font-weight:700}
+    .set-table th{font-family:var(--font-display);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}
+    .set-table tr:last-child td{border-bottom:0}
+    .set-table input{width:100%;max-width:110px;background:var(--panel);border:3px solid var(--border);border-radius:10px;padding:9px 10px;color:var(--text);font-family:var(--font-body);font-weight:700}
+    .set-check{width:21px;height:21px;accent-color:var(--teal)}
+    .tracker-actions{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:4px}
+    .tracker-actions .btn{min-width:150px}
+    .tracker-actions-right{display:flex;gap:14px;flex-wrap:wrap}
+    .summary-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+    .summary-stat{padding:22px;background:var(--teal);border:4px solid var(--border);border-radius:var(--radius-sm);color:var(--border)}
+    .summary-stat .stat-number{font-family:var(--font-display);font-size:48px;line-height:1;font-weight:900;letter-spacing:-.06em}
+    .summary-stat .stat-label{font-family:var(--font-display);font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin-top:12px}
+    .pr-list{display:grid;gap:10px}
+    .pr-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;background:var(--panel-2);border:3px solid var(--border);border-radius:14px}
+    .pr-name{display:flex;align-items:center;gap:11px;font-weight:800;font-size:14px}
+    .medal{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:3px solid var(--border);border-radius:50%;background:var(--gold);font-size:18px;flex:0 0 auto}
+    .pr-value{font-family:var(--font-display);font-weight:900;color:var(--teal)}
+    .summary-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:22px;padding-top:22px;border-top:3px solid var(--panel-3);flex-wrap:wrap}
+    .summary-message{font-size:14px;font-weight:700;color:var(--text-muted)}
+    .muted{color:var(--text-muted)}
+    .divider{border:0;border-top:3px solid var(--panel-3);margin:28px 0}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    @media (max-width:800px){.dashboard-grid,.summary-grid{grid-template-columns:1fr}.action-grid{grid-template-columns:1fr}.action-card{min-height:130px}.page-heading{align-items:flex-start}.back-btn{width:100%;justify-content:center}.exercise-row,.table-head{grid-template-columns:minmax(130px,1fr) 66px 66px 38px;gap:7px}.exercise-row input{padding:9px 7px}.set-table th,.set-table td{padding:10px 8px}}
+    @media (max-width:520px){body{padding:24px 12px 60px}.panel{padding:20px}.split-choice{grid-template-columns:1fr}.exercise-row,.table-head{grid-template-columns:minmax(110px,1fr) 57px 57px 36px}.exercise-row input{font-size:12px}.remove-btn{width:36px;height:36px}.timer{font-size:24px}.set-table{font-size:12px}.set-table input{max-width:80px}.tracker-actions,.tracker-actions-right{width:100%}.tracker-actions .btn{flex:1;min-width:0}}
+  </style>
+</head>
+<body class="dark-theme">
+  <main class="app" id="appRoot" style="display:none;">
+    <header class="topbar">
+      <div class="wordmark">LIFE OS<span>WORKOUT & MOBILITY ARCHITECT</span></div>
+      <div class="topbar-right">
+        <div class="date-chip">THURSDAY · 23 AUG 2026</div>
+        <button class="icon-btn" type="button" aria-label="Toggle theme" id="themeToggleBtn">◐</button>
+      </div>
+    </header>
+
+    <section id="dashboard-view" class="page-view">
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">Training command center</p>
+          <h1>Move with intent.</h1>
+          <p>Design a plan, make every set count, and keep your body ready for the work that matters.</p>
+        </div>
+        <a class="btn back-btn" href="index.html"><span class="back-arrow">←</span> Back to Dashboard</a>
+      </div>
+
+      <div class="dashboard-grid">
+        <section class="panel">
+          <div class="section-header">
+            <p class="panel-title">Choose your next move <span class="view-label"><span></span> Home</span></p>
+          </div>
+          <div class="action-grid">
+            <button class="action-card orange" type="button" id="nav-workout-creation">
+              <span><span class="action-icon">✦</span><span class="action-label">Workout Creation</span><span class="action-detail">Build a focused split around your goals.</span></span>
+              <span class="card-arrow">↗</span>
+            </button>
+            <button class="action-card teal" type="button" id="nav-live-tracker">
+              <span><span class="action-icon">◉</span><span class="action-label">Workout Tracking</span><span class="action-detail">Log your active session set by set.</span></span>
+              <span class="card-arrow">↗</span>
+            </button>
+            <button class="action-card violet" type="button" id="nav-mobility-creation">
+              <span><span class="action-icon">⌁</span><span class="action-label">Stretching</span><span class="action-detail">Create a mobility routine that keeps you moving.</span></span>
+              <span class="card-arrow">↗</span>
+            </button>
+          </div>
+        </section>
+
+        <aside class="panel streak-card">
+          <div class="streak-top">
+            <div>
+              <p class="eyebrow">Consistency streak</p>
+              <div class="streak-number">12</div>
+              <div class="streak-unit">Weeks lifting continuously</div>
+            </div>
+            <div class="streak-mark">⚡</div>
+          </div>
+          <p class="streak-copy">You are one week away from your personal best. Keep the rhythm alive.</p>
+          <div class="mini-calendar" aria-label="Four weeks of training consistency">
+            <span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span>
+            <span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span>
+            <span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span>
+            <span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span class="today"></span><span></span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="workout-creation-view" class="panel section-stack page-view" style="display:none;">
+      <div class="section-header">
+        <div>
+          <p class="panel-title">Workout creation <span class="view-label"><span></span> Architect</span></p>
+          <h2>Build your training split.</h2>
+          <p class="muted">Start from a proven template or shape the week around your own priorities.</p>
+        </div>
+        <button class="btn" type="button" id="close-workout-creation">Close</button>
+      </div>
+
+      <div class="split-choice">
+        <label class="choice-card selected">
+          <input type="radio" name="workout-plan-type" value="sample" checked>
+          <span><span class="choice-title">Sample Split</span><span class="choice-copy">Use a balanced evidence-led starting point.</span></span>
+        </label>
+        <label class="choice-card">
+          <input type="radio" name="workout-plan-type" value="custom">
+          <span><span class="choice-title">Custom Split</span><span class="choice-copy">Build every training day from the ground up.</span></span>
+        </label>
+      </div>
+
+      <div class="fieldrow-2">
+        <div class="field">
+          <label for="workout-days">How many days will you work out?</label>
+          <input id="workout-days" type="number" value="4" min="1" max="7">
+        </div>
+        <div class="field">
+          <label for="workout-goal">Primary goal</label>
+          <select id="workout-goal">
+            <option>Build strength</option>
+            <option>Build muscle</option>
+            <option>Improve performance</option>
+            <option>General fitness</option>
+          </select>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="builder-toolbar">
+        <p class="panel-title">Your split</p>
+        <button class="small-action" type="button" id="add-workout-day-btn">+ Add training day</button>
+      </div>
+
+      <div class="split-list" id="workout-split-list">
+        <article class="split-card" data-day-index="0">
+          <div class="split-card-header">
+            <div class="split-name"><span class="split-index">01</span> Pull</div>
+            <button class="small-action rename-btn" type="button">Rename split</button>
+          </div>
+          <div class="table-head"><span>Exercise</span><span>Sets</span><span>Reps</span><span></span></div>
+          <div class="exercise-list">
+            <div class="exercise-row" data-ex-index="0"><input type="text" value="Lat Pulldown" data-field="name" list="exercise-master-list" aria-label="Exercise name"><input type="number" value="3" data-field="sets" aria-label="Sets"><input type="text" value="8–12" data-field="reps" aria-label="Reps"><button class="remove-btn" type="button" aria-label="Remove exercise">×</button></div>
+            <div class="exercise-row" data-ex-index="1"><input type="text" value="Seated Cable Row" data-field="name" list="exercise-master-list" aria-label="Exercise name"><input type="number" value="3" data-field="sets" aria-label="Sets"><input type="text" value="8–12" data-field="reps" aria-label="Reps"><button class="remove-btn" type="button" aria-label="Remove exercise">×</button></div>
+            <div class="exercise-row" data-ex-index="2"><input type="text" value="Preacher Curl" data-field="name" list="exercise-master-list" aria-label="Exercise name"><input type="number" value="3" data-field="sets" aria-label="Sets"><input type="text" value="10–15" data-field="reps" aria-label="Reps"><button class="remove-btn" type="button" aria-label="Remove exercise">×</button></div>
+          </div>
+          <button class="small-action add-row" type="button">+ Add exercise</button>
+        </article>
+
+        <article class="split-card" data-day-index="1">
+          <div class="split-card-header">
+            <div class="split-name"><span class="split-index">02</span> Push</div>
+            <button class="small-action rename-btn" type="button">Rename split</button>
+          </div>
+          <div class="table-head"><span>Exercise</span><span>Sets</span><span>Reps</span><span></span></div>
+          <div class="exercise-list">
+            <div class="exercise-row" data-ex-index="0"><input type="text" value="Incline Dumbbell Press" data-field="name" list="exercise-master-list" aria-label="Exercise name"><input type="number" value="3" data-field="sets" aria-label="Sets"><input type="text" value="8–12" data-field="reps" aria-label="Reps"><button class="remove-btn" type="button" aria-label="Remove exercise">×</button></div>
+            <div class="exercise-row" data-ex-index="1"><input type="text" value="Cable Lateral Raise" data-field="name" list="exercise-master-list" aria-label="Exercise name"><input type="number" value="3" data-field="sets" aria-label="Sets"><input type="text" value="12–15" data-field="reps" aria-label="Reps"><button class="remove-btn" type="button" aria-label="Remove exercise">×</button></div>
+          </div>
+          <button class="small-action add-row" type="button">+ Add exercise</button>
+        </article>
+      </div>
+
+      <div class="notice warning hidden-state" role="status" id="workout-notice-warning"><span class="notice-icon">!</span><span><strong>Muscle groups not maximized.</strong> Rear delts and calves have limited weekly coverage. Consider adding one targeted movement before saving.</span></div>
+      <div class="notice danger hidden-state" role="status" id="workout-notice-danger"><span class="notice-icon">▲</span><span><strong>Junk volume detected.</strong> The current split may exceed your recoverable volume for shoulders and elbows.</span></div>
+      <div class="notice success hidden-state" role="status" id="workout-notice-success"><span class="notice-icon">✓</span><span><strong>Split maximized.</strong> Every major muscle group has a clear stimulus and the weekly workload is balanced.</span></div>
+
+      <div class="maximize-row">
+        <span class="muted">The architect will check balance, coverage, and recoverability.</span>
+        <button class="btn btn-primary" type="button" id="maximize-split-btn">Maximize Split</button>
+      </div>
+    </section>
+
+    <section id="mobility-creation-view" class="panel section-stack page-view" style="display:none;">
+      <div class="section-header">
+        <div>
+          <p class="panel-title">Stretching & mobility <span class="view-label"><span></span> Restore</span></p>
+          <h2>Build your mobility routine.</h2>
+          <p class="muted">Create a repeatable practice for the joints and positions you want to move through with ease.</p>
+        </div>
+        <button class="btn" type="button" id="close-mobility-creation">Close</button>
+      </div>
+
+      <div class="split-choice">
+        <label class="choice-card selected">
+          <input type="radio" name="mobility-plan-type" value="sample" checked>
+          <span><span class="choice-title">Sample Routine</span><span class="choice-copy">Begin with a full-body mobility foundation.</span></span>
+        </label>
+        <label class="choice-card">
+          <input type="radio" name="mobility-plan-type" value="custom">
+          <span><span class="choice-title">Custom Routine</span><span class="choice-copy">Choose the positions and joints you want to target.</span></span>
+        </label>
+      </div>
+
+      <div class="fieldrow-2">
+        <div class="field">
+          <label for="mobility-days">How many days will you practice?</label>
+          <input id="mobility-days" type="number" value="3" min="1" max="7">
+        </div>
+        <div class="field">
+          <label for="mobility-focus">Primary focus</label>
+          <select id="mobility-focus">
+            <option>Full body</option>
+            <option>Hips & ankles</option>
+            <option>Shoulders & thoracic spine</option>
+            <option>Recovery flow</option>
+          </select>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="builder-toolbar">
+        <p class="panel-title">Your routine</p>
+        <button class="small-action" type="button" id="add-mobility-day-btn">+ Add mobility day</button>
+      </div>
+
+      <div class="split-list" id="mobility-split-list">
+        <article class="split-card" data-day-index="0">
+          <div class="split-card-header">
+            <div class="split-name"><span class="split-index">01</span> Hips & Ankles</div>
+            <button class="small-action rename-btn" type="button">Rename routine</button>
+          </div>
+          <div class="table-head"><span>Stretch</span><span>Sets</span><span>Time</span><span></span></div>
+          <div class="exercise-list">
+            <div class="exercise-row" data-ex-index="0"><input type="text" value="90/90 Hip Switch" data-field="name" list="exercise-master-list" aria-label="Stretch name"><input type="number" value="2" data-field="sets" aria-label="Sets"><input type="text" value="45 sec" data-field="duration" aria-label="Duration"><button class="remove-btn" type="button" aria-label="Remove stretch">×</button></div>
+            <div class="exercise-row" data-ex-index="1"><input type="text" value="Couch Stretch" data-field="name" list="exercise-master-list" aria-label="Stretch name"><input type="number" value="2" data-field="sets" aria-label="Sets"><input type="text" value="60 sec" data-field="duration" aria-label="Duration"><button class="remove-btn" type="button" aria-label="Remove stretch">×</button></div>
+            <div class="exercise-row" data-ex-index="2"><input type="text" value="Knee-to-Wall" data-field="name" list="exercise-master-list" aria-label="Stretch name"><input type="number" value="2" data-field="sets" aria-label="Sets"><input type="text" value="45 sec" data-field="duration" aria-label="Duration"><button class="remove-btn" type="button" aria-label="Remove stretch">×</button></div>
+          </div>
+          <button class="small-action add-row" type="button">+ Add stretch</button>
+        </article>
+
+        <article class="split-card" data-day-index="1">
+          <div class="split-card-header">
+            <div class="split-name"><span class="split-index">02</span> Shoulders</div>
+            <button class="small-action rename-btn" type="button">Rename routine</button>
+          </div>
+          <div class="table-head"><span>Stretch</span><span>Sets</span><span>Time</span><span></span></div>
+          <div class="exercise-list">
+            <div class="exercise-row" data-ex-index="0"><input type="text" value="Wall Slides" data-field="name" list="exercise-master-list" aria-label="Stretch name"><input type="number" value="2" data-field="sets" aria-label="Sets"><input type="text" value="10 reps" data-field="duration" aria-label="Duration"><button class="remove-btn" type="button" aria-label="Remove stretch">×</button></div>
+            <div class="exercise-row" data-ex-index="1"><input type="text" value="Thread the Needle" data-field="name" list="exercise-master-list" aria-label="Stretch name"><input type="number" value="2" data-field="sets" aria-label="Sets"><input type="text" value="45 sec" data-field="duration" aria-label="Duration"><button class="remove-btn" type="button" aria-label="Remove stretch">×</button></div>
+          </div>
+          <button class="small-action add-row" type="button">+ Add stretch</button>
+        </article>
+      </div>
+
+      <div class="notice warning hidden-state" role="status" id="mobility-notice-warning"><span class="notice-icon">!</span><span><strong>Mobility gaps detected.</strong> Hip internal rotation and ankle dorsiflexion need more direct attention.</span></div>
+      <div class="notice danger hidden-state" role="status" id="mobility-notice-danger"><span class="notice-icon">▲</span><span><strong>Recovery overlap detected.</strong> The routine repeats high-intensity end-range work on consecutive days.</span></div>
+      <div class="notice success hidden-state" role="status" id="mobility-notice-success"><span class="notice-icon">✓</span><span><strong>Mobility routine maximized.</strong> Your selected joints have balanced frequency, duration, and movement variety.</span></div>
+
+      <div class="maximize-row">
+        <span class="muted">The architect will check joint coverage, frequency, and recovery demand.</span>
+        <button class="btn btn-primary" type="button" id="maximize-mobility-btn">Maximize Mobility</button>
+      </div>
+    </section>
+
+    <section id="live-tracker-view" class="panel section-stack page-view" style="display:none;">
+      <div class="section-header">
+        <div>
+          <p class="panel-title">Live workout tracker <span class="view-label"><span></span> In session</span></p>
+          <h2 id="tracker-day-title">Pull day · Week 12</h2>
+          <p class="muted">Stay present. Log the work, then leave with a clear record of what you built.</p>
+        </div>
+        <div class="active-badge"><span></span> Active workout</div>
+      </div>
+
+      <div class="tracker-shell">
+        <div class="tracker-header">
+          <div><div class="eyebrow">Session timer</div><div class="timer" id="session-timer">00:00:00</div></div>
+          <div class="muted" id="tracker-session-meta">4 exercises planned</div>
+        </div>
+
+        <div id="tracker-exercise-list"></div>
+
+        <button class="btn" type="button" id="add-tracker-exercise-btn">+ Add Exercise</button>
+
+        <div class="tracker-actions">
+          <button class="btn btn-danger-ghost" type="button" id="discard-workout-btn">Discard</button>
+          <div class="tracker-actions-right"><button class="btn" type="button" id="save-exit-btn">Save & Exit</button><button class="btn btn-primary" type="button" id="finish-workout-btn">Finish Workout</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="post-workout-summary-view" class="panel section-stack page-view" style="display:none;">
+      <div class="section-header">
+        <div>
+          <p class="panel-title">Post-workout summary <span class="view-label"><span></span> Complete</span></p>
+          <h2>Strong session. Logged for good.</h2>
+          <p class="muted" id="summary-date">Thursday · 23 August 2026 · Pull day</p>
+        </div>
+        <button class="btn" type="button" id="back-to-workouts-btn">Back to Workouts</button>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-stat"><div class="eyebrow">Total volume</div><div class="stat-number" id="summary-total-volume">7,420 kg</div><div class="stat-label">Across 12 completed sets</div></div>
+        <div class="summary-stat" style="background:var(--gold)"><div class="eyebrow">Session time</div><div class="stat-number" id="summary-session-time">48 min</div><div class="stat-label">Focused work completed</div></div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="section-header"><p class="panel-title">Personal records</p><span class="muted">3 new bests</span></div>
+      <div class="pr-list">
+        <div class="pr-row"><div class="pr-name"><span class="medal">🏅</span><span>Preacher Curl</span></div><span class="pr-value">+2 kg</span></div>
+        <div class="pr-row"><div class="pr-name"><span class="medal">🏅</span><span>Lat Pulldown</span></div><span class="pr-value">+5 kg</span></div>
+        <div class="pr-row"><div class="pr-name"><span class="medal">🏅</span><span>Seated Cable Row</span></div><span class="pr-value">+3 reps</span></div>
+      </div>
+
+      <div class="notice success" role="status" style="margin-top:22px"><span class="notice-icon">✓</span><span><strong>Consistency banked.</strong> Your lifting streak is now 13 weeks continuous.</span></div>
+      <div class="summary-footer"><span class="summary-message">Small, repeatable wins compound into a very different body.</span><button class="btn btn-primary" type="button" id="post-workout-done-btn">Done</button></div>
+    </section>
+  </main>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="global.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+(function(){
+  var state = {
+    uid: null,
+    workoutDoc: { planType:'sample', goal:'Build muscle', splitDays: [] },
+    mobilityDoc: { planType:'sample', focus:'Full body', splitDays: [] },
+    timerSeconds: 0,
+    timerInterval: null,
+    activeDayName: '',
+    activeDayIndex: 0
+  };
+
+  var exerciseMasterList = [
+    'Barbell Bench Press','Incline Barbell Bench Press','Decline Bench Press','Dumbbell Bench Press','Incline Dumbbell Press','Chest Fly','Cable Crossover','Push Up','Dip',
+    'Deadlift','Romanian Deadlift','Barbell Row','Seated Cable Row','Lat Pulldown','Pull Up','Chin Up','T-Bar Row','Single-Arm Dumbbell Row',
+    'Overhead Press','Military Press','Arnold Press','Dumbbell Shoulder Press','Lateral Raise','Cable Lateral Raise','Front Raise','Face Pull','Rear Delt Fly',
+    'Barbell Curl','Dumbbell Curl','Hammer Curl','Preacher Curl','Cable Curl','Concentration Curl',
+    'Tricep Pushdown','Overhead Tricep Extension','Skull Crusher','Close Grip Bench Press','Tricep Dip',
+    'Back Squat','Front Squat','Leg Press','Walking Lunge','Bulgarian Split Squat','Leg Extension','Step Up',
+    'Leg Curl','Good Morning','Nordic Curl',
+    'Hip Thrust','Glute Bridge','Cable Kickback',
+    'Standing Calf Raise','Seated Calf Raise',
+    'Crunch','Sit Up','Plank','Ab Wheel Rollout','Hanging Leg Raise','Cable Crunch',
+    '90/90 Hip Switch','Couch Stretch','Pigeon Pose','Knee-to-Wall','Wall Slides','Thread the Needle','Cat-Cow','World\u2019s Greatest Stretch','Ankle Dorsiflexion Rock','Hip Flexor Stretch','Thoracic Rotation','Shoulder Dislocates','Neck Rolls','Wrist Circles'
+  ];
+
+  function injectExerciseDatalist(){
+    if(qs('exercise-master-list')) return;
+    var datalist = document.createElement('datalist');
+    datalist.id = 'exercise-master-list';
+    datalist.innerHTML = exerciseMasterList.map(function(name){
+      return '<option value="'+escapeHtml(name)+'"></option>';
+    }).join('');
+    document.body.appendChild(datalist);
+  }
+
+  var muscleGroupKeywords = {
+    'Chest': ['bench','chest fly','chest press','push up','push-up','dip'],
+    'Back': ['row','pulldown','pull up','pull-up','deadlift','lat '],
+    'Shoulders': ['shoulder press','overhead press','military press','lateral raise','front raise','face pull','rear delt','arnold press'],
+    'Biceps': ['curl'],
+    'Triceps': ['tricep','pushdown','skull crusher','close grip','overhead extension'],
+    'Quads': ['squat','leg press','lunge','leg extension','step up','step-up'],
+    'Hamstrings': ['romanian deadlift','rdl','leg curl','hamstring','good morning'],
+    'Glutes': ['hip thrust','glute bridge','glute'],
+    'Calves': ['calf'],
+    'Abs': ['crunch','sit up','sit-up','plank','ab wheel','leg raise']
+  };
+  var majorMuscleGroups = ['Chest','Back','Shoulders','Biceps','Triceps','Quads','Hamstrings','Glutes','Calves'];
+
+  var jointKeywords = {
+    'Hips': ['hip','couch stretch','pigeon','90/90'],
+    'Ankles': ['ankle','knee-to-wall','knee to wall'],
+    'Shoulders': ['shoulder','wall slide'],
+    'Thoracic Spine': ['thoracic','thread the needle','spine','cat-cow','cat cow'],
+    'Knees': ['knee'],
+    'Wrists': ['wrist'],
+    'Neck': ['neck']
+  };
+  var majorJointGroups = ['Hips','Ankles','Shoulders','Thoracic Spine','Knees','Wrists','Neck'];
+
+  function qs(id){
+    return document.getElementById(id);
+  }
+
+  function escapeHtml(str){
+    return String(str==null?'':str).replace(/[&<>"']/g, function(ch){
+      var map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+      return map[ch];
+    });
+  }
+
+  function padIndex(n){
+    return n < 10 ? '0'+n : String(n);
+  }
+
+  function getGroupFromKeywords(name, dictionary){
+    var lower = (name||'').toLowerCase();
+    for(var group in dictionary){
+      var keywords = dictionary[group];
+      for(var i=0;i<keywords.length;i++){
+        if(lower.indexOf(keywords[i]) !== -1) return group;
+      }
+    }
+    return null;
+  }
+
+  function getMuscleGroup(name){
+    return getGroupFromKeywords(name, muscleGroupKeywords);
+  }
+
+  function getJointGroup(name){
+    return getGroupFromKeywords(name, jointKeywords);
+  }
+
+  function showView(id){
+    document.querySelectorAll('.page-view').forEach(function(view){
+      view.style.display = 'none';
+    });
+    var target = qs(id);
+    if(target) target.style.display = '';
+    if(id !== 'live-tracker-view') stopSessionTimer();
+  }
+
+  function parseInitialSplitState(containerId, thirdFieldName){
+    var container = qs(containerId);
+    var days = [];
+    if(!container) return days;
+    container.querySelectorAll('.split-card').forEach(function(card){
+      var nameEl = card.querySelector('.split-name');
+      var rawName = nameEl ? nameEl.textContent.trim() : 'Day';
+      var cleanName = rawName.replace(/^\d+\s*/, '');
+      var exercises = [];
+      card.querySelectorAll('.exercise-row').forEach(function(row){
+        var inputs = row.querySelectorAll('input');
+        var exercise = { name: inputs[0].value, sets: Number(inputs[1].value)||0 };
+        exercise[thirdFieldName] = inputs[2].value;
+        exercises.push(exercise);
+      });
+      days.push({ name: cleanName, exercises: exercises });
+    });
+    return days;
+  }
+
+  function renderSplitList(containerId, days, thirdFieldName, thirdFieldLabel, addLabel, renameLabel){
+    var container = qs(containerId);
+    if(!container) return;
+    container.innerHTML = days.map(function(day, dayIndex){
+      var rows = day.exercises.map(function(exercise, exerciseIndex){
+        return '<div class="exercise-row" data-ex-index="'+exerciseIndex+'">'
+          + '<input type="text" value="'+escapeHtml(exercise.name)+'" data-field="name" list="exercise-master-list" aria-label="Exercise name">'
+          + '<input type="number" value="'+(exercise.sets||0)+'" data-field="sets" aria-label="Sets">'
+          + '<input type="text" value="'+escapeHtml(exercise[thirdFieldName])+'" data-field="'+thirdFieldName+'" aria-label="'+thirdFieldLabel+'">'
+          + '<button class="remove-btn" type="button" aria-label="Remove exercise">×</button>'
+          + '</div>';
+      }).join('');
+      return '<article class="split-card" data-day-index="'+dayIndex+'">'
+        + '<div class="split-card-header">'
+        + '<div class="split-name"><span class="split-index">'+padIndex(dayIndex+1)+'</span> '+escapeHtml(day.name)+'</div>'
+        + '<button class="small-action rename-btn" type="button">'+renameLabel+'</button>'
+        + '</div>'
+        + '<div class="table-head"><span>'+thirdFieldLabel+'</span><span>Sets</span><span>'+(thirdFieldName==='reps'?'Reps':'Time')+'</span><span></span></div>'
+        + '<div class="exercise-list">'+rows+'</div>'
+        + '<button class="small-action add-row" type="button">'+addLabel+'</button>'
+        + '</article>';
+    }).join('');
+  }
+
+  function renderWorkoutDays(){
+    renderSplitList('workout-split-list', state.workoutDoc.splitDays, 'reps', 'Exercise', '+ Add exercise', 'Rename split');
+  }
+
+  function renderMobilityDays(){
+    renderSplitList('mobility-split-list', state.mobilityDoc.splitDays, 'duration', 'Stretch', '+ Add stretch', 'Rename routine');
+  }
+
+  var workoutSaveTimeout = null;
+  function persistWorkoutSplit(){
+    if(!window.firebaseReady || !state.uid) return;
+    clearTimeout(workoutSaveTimeout);
+    workoutSaveTimeout = setTimeout(function(){
+      window.db.collection('workoutSplits').doc(state.uid).set({
+        planType: state.workoutDoc.planType,
+        goal: qs('workout-goal') ? qs('workout-goal').value : state.workoutDoc.goal,
+        splitDays: state.workoutDoc.splitDays,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(function(e){
+        console.error('Failed to save workout split', {code: e && e.code, message: e && e.message});
+      });
+    }, 600);
+  }
+
+  function persistWorkoutSplitImmediate(){
+    if(!window.firebaseReady || !state.uid) return;
+    window.db.collection('workoutSplits').doc(state.uid).set({
+      planType: state.workoutDoc.planType,
+      goal: qs('workout-goal') ? qs('workout-goal').value : state.workoutDoc.goal,
+      splitDays: state.workoutDoc.splitDays,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(function(e){
+      console.error('Failed to seed workout split', {code: e && e.code, message: e && e.message});
+    });
+  }
+
+  var mobilitySaveTimeout = null;
+  function persistMobilityRoutine(){
+    if(!window.firebaseReady || !state.uid) return;
+    clearTimeout(mobilitySaveTimeout);
+    mobilitySaveTimeout = setTimeout(function(){
+      window.db.collection('mobilityRoutines').doc(state.uid).set({
+        planType: state.mobilityDoc.planType,
+        focus: qs('mobility-focus') ? qs('mobility-focus').value : state.mobilityDoc.focus,
+        splitDays: state.mobilityDoc.splitDays,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(function(e){
+        console.error('Failed to save mobility routine', {code: e && e.code, message: e && e.message});
+      });
+    }, 600);
+  }
+
+  function persistMobilityRoutineImmediate(){
+    if(!window.firebaseReady || !state.uid) return;
+    window.db.collection('mobilityRoutines').doc(state.uid).set({
+      planType: state.mobilityDoc.planType,
+      focus: qs('mobility-focus') ? qs('mobility-focus').value : state.mobilityDoc.focus,
+      splitDays: state.mobilityDoc.splitDays,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(function(e){
+      console.error('Failed to seed mobility routine', {code: e && e.code, message: e && e.message});
+    });
+  }
+
+  function loadWorkoutSplit(){
+    state.workoutDoc.splitDays = parseInitialSplitState('workout-split-list', 'reps');
+    if(!window.firebaseReady || !state.uid) return;
+    window.db.collection('workoutSplits').doc(state.uid).get().then(function(doc){
+      if(doc.exists){
+        var data = doc.data();
+        state.workoutDoc.planType = data.planType || 'sample';
+        state.workoutDoc.splitDays = data.splitDays || [];
+        if(data.goal && qs('workout-goal')) qs('workout-goal').value = data.goal;
+        if(qs('workout-days')) qs('workout-days').value = state.workoutDoc.splitDays.length || 1;
+        renderWorkoutDays();
+      } else {
+        persistWorkoutSplitImmediate();
+      }
+    }).catch(function(e){
+      console.error('Failed to load workout split', {code: e && e.code, message: e && e.message});
+    });
+  }
+
+  function loadMobilityRoutine(){
+    state.mobilityDoc.splitDays = parseInitialSplitState('mobility-split-list', 'duration');
+    if(!window.firebaseReady || !state.uid) return;
+    window.db.collection('mobilityRoutines').doc(state.uid).get().then(function(doc){
+      if(doc.exists){
+        var data = doc.data();
+        state.mobilityDoc.planType = data.planType || 'sample';
+        state.mobilityDoc.splitDays = data.splitDays || [];
+        if(data.focus && qs('mobility-focus')) qs('mobility-focus').value = data.focus;
+        if(qs('mobility-days')) qs('mobility-days').value = state.mobilityDoc.splitDays.length || 1;
+        renderMobilityDays();
+      } else {
+        persistMobilityRoutineImmediate();
+      }
+    }).catch(function(e){
+      console.error('Failed to load mobility routine', {code: e && e.code, message: e && e.message});
+    });
+  }
+
+  function auditWorkoutSplit(){
+    var weeklyVolume = {};
+    var sessionOverloads = [];
+    state.workoutDoc.splitDays.forEach(function(day){
+      var sessionVolume = {};
+      day.exercises.forEach(function(exercise){
+        var group = getMuscleGroup(exercise.name);
+        if(!group) return;
+        var sets = Number(exercise.sets)||0;
+        weeklyVolume[group] = (weeklyVolume[group]||0) + sets;
+        sessionVolume[group] = (sessionVolume[group]||0) + sets;
+      });
+      Object.keys(sessionVolume).forEach(function(group){
+        if(sessionVolume[group] > 8){
+          sessionOverloads.push({ day: day.name, group: group, sets: sessionVolume[group] });
+        }
+      });
+    });
+    var underTrained = majorMuscleGroups.filter(function(group){
+      return (weeklyVolume[group]||0) > 0 && (weeklyVolume[group]||0) < 10;
+    });
+    return { weeklyVolume: weeklyVolume, sessionOverloads: sessionOverloads, underTrained: underTrained };
+  }
+
+  function auditMobilityRoutine(){
+    var weeklyVolume = {};
+    var sessionOverloads = [];
+    state.mobilityDoc.splitDays.forEach(function(day){
+      var sessionVolume = {};
+      day.exercises.forEach(function(exercise){
+        var joint = getJointGroup(exercise.name);
+        if(!joint) return;
+        var sets = Number(exercise.sets)||0;
+        weeklyVolume[joint] = (weeklyVolume[joint]||0) + sets;
+        sessionVolume[joint] = (sessionVolume[joint]||0) + sets;
+      });
+      Object.keys(sessionVolume).forEach(function(joint){
+        if(sessionVolume[joint] > 6){
+          sessionOverloads.push({ day: day.name, joint: joint, sets: sessionVolume[joint] });
+        }
+      });
+    });
+    var underCovered = majorJointGroups.filter(function(joint){
+      return (weeklyVolume[joint]||0) > 0 && (weeklyVolume[joint]||0) < 4;
+    });
+    return { weeklyVolume: weeklyVolume, sessionOverloads: sessionOverloads, underCovered: underCovered };
+  }
+
+  function setNotice(prefix, type, message){
+    ['warning','danger','success'].forEach(function(t){
+      var el = qs(prefix+'-notice-'+t);
+      if(el) el.classList.add('hidden-state');
+    });
+    var target = qs(prefix+'-notice-'+type);
+    if(!target) return;
+    target.classList.remove('hidden-state');
+    var textSpan = target.querySelector('span:last-child');
+    if(textSpan) textSpan.innerHTML = message;
+  }
+
+  function runWorkoutAudit(){
+    var audit = auditWorkoutSplit();
+    if(audit.sessionOverloads.length){
+      var overloadDetail = audit.sessionOverloads.map(function(o){
+        return o.group+' on '+o.day+' ('+o.sets+' sets)';
+      }).join(', ');
+      setNotice('workout', 'danger', '<strong>Junk volume detected.</strong> These sessions exceed the 8-set recoverable ceiling: '+overloadDetail+'.');
+    } else if(audit.underTrained.length){
+      setNotice('workout', 'warning', '<strong>Muscle groups not maximized.</strong> '+audit.underTrained.join(', ')+' fall below the 10-set weekly minimum for hypertrophy.');
+    } else {
+      setNotice('workout', 'success', '<strong>Split maximized.</strong> Every tracked muscle group falls within the 10–20 weekly set range with no single session exceeding 8 sets.');
+    }
+  }
+
+  function runMobilityAudit(){
+    var audit = auditMobilityRoutine();
+    if(audit.sessionOverloads.length){
+      var overloadDetail = audit.sessionOverloads.map(function(o){
+        return o.joint+' on '+o.day+' ('+o.sets+' sets)';
+      }).join(', ');
+      setNotice('mobility', 'danger', '<strong>Recovery overlap detected.</strong> These sessions stack heavy end-range work on one joint: '+overloadDetail+'.');
+    } else if(audit.underCovered.length){
+      setNotice('mobility', 'warning', '<strong>Mobility gaps detected.</strong> '+audit.underCovered.join(', ')+' fall below the weekly coverage needed for lasting change.');
+    } else {
+      setNotice('mobility', 'success', '<strong>Mobility routine maximized.</strong> Your selected joints have balanced frequency, duration, and movement variety.');
+    }
+  }
+
+  function attachSplitListEvents(containerId, docState, renderFn, persistFn, defaultThirdField, defaultThirdValue){
+    var container = qs(containerId);
+    if(!container) return;
+    container.addEventListener('click', function(e){
+      var card = e.target.closest('.split-card');
+      if(!card) return;
+      var dayIndex = Number(card.getAttribute('data-day-index'));
+      if(e.target.classList.contains('remove-btn')){
+        var row = e.target.closest('.exercise-row');
+        var exerciseIndex = Number(row.getAttribute('data-ex-index'));
+        docState.splitDays[dayIndex].exercises.splice(exerciseIndex, 1);
+        renderFn();
+        persistFn();
+      } else if(e.target.classList.contains('add-row')){
+        var newExercise = { name: '', sets: 3 };
+        newExercise[defaultThirdField] = defaultThirdValue;
+        docState.splitDays[dayIndex].exercises.push(newExercise);
+        renderFn();
+        persistFn();
+      } else if(e.target.classList.contains('rename-btn')){
+        var newName = prompt('Rename this day', docState.splitDays[dayIndex].name);
+        if(newName){
+          docState.splitDays[dayIndex].name = newName;
+          renderFn();
+          persistFn();
+        }
+      }
+    });
+    container.addEventListener('input', function(e){
+      var row = e.target.closest('.exercise-row');
+      if(!row) return;
+      var card = e.target.closest('.split-card');
+      if(!card) return;
+      var dayIndex = Number(card.getAttribute('data-day-index'));
+      var exerciseIndex = Number(row.getAttribute('data-ex-index'));
+      var field = e.target.getAttribute('data-field');
+      if(!field) return;
+      if(field === 'sets'){
+        docState.splitDays[dayIndex].exercises[exerciseIndex][field] = Number(e.target.value)||0;
+      } else {
+        docState.splitDays[dayIndex].exercises[exerciseIndex][field] = e.target.value;
+      }
+      persistFn();
+    });
+  }
+
+  function stopSessionTimer(){
+    if(state.timerInterval){
+      clearInterval(state.timerInterval);
+      state.timerInterval = null;
+    }
+  }
+
+  function updateTimerDisplay(){
+    var timerEl = qs('session-timer');
+    if(!timerEl) return;
+    var hours = Math.floor(state.timerSeconds/3600);
+    var minutes = Math.floor((state.timerSeconds%3600)/60);
+    var seconds = state.timerSeconds%60;
+    var parts = [hours, minutes, seconds].map(function(value){
+      return value < 10 ? '0'+value : String(value);
+    });
+    timerEl.textContent = parts.join(':');
+  }
+
+  function targetLabelForExercise(exercise){
+    return 'Target: '+(Number(exercise.sets)||0)+' × '+(exercise.reps||'—');
+  }
+
+  function buildTrackerExerciseArticle(exercise, index){
+    var setsCount = Number(exercise.sets)||1;
+    var rows = '';
+    for(var i=1;i<=setsCount;i++){
+      rows += '<tr><td><input class="set-check" type="checkbox" aria-label="Complete set '+i+'"></td><td>'+i+'</td>'
+        + '<td><input type="number" placeholder="—" aria-label="Set '+i+' reps"></td>'
+        + '<td><input type="number" placeholder="—" aria-label="Set '+i+' weight"><span class="muted"> kg</span></td>'
+        + '<td class="muted">—</td></tr>';
+    }
+    return '<article class="tracker-exercise">'
+      + '<div class="tracker-exercise-header"><span class="tracker-exercise-title"><span class="tracker-exercise-index">'+(index+1)+'.</span><input type="text" class="tracker-name-input" value="'+escapeHtml(exercise.name)+'" list="exercise-master-list" aria-label="Exercise name"></span><span class="muted">'+targetLabelForExercise(exercise)+'</span></div>'
+      + '<table class="set-table"><thead><tr><th>Done</th><th>Set</th><th>Reps</th><th>Weight</th><th>Previous</th></tr></thead>'
+      + '<tbody>'+rows+'</tbody></table>'
+      + '<div style="padding:0 14px 16px"><button class="small-action add-set-btn" type="button">+ Add set</button></div>'
+      + '</article>';
+  }
+
+  function renderTrackerExerciseList(){
+    var list = qs('tracker-exercise-list');
+    if(!list) return;
+    var day = state.workoutDoc.splitDays[state.activeDayIndex];
+    var exercises = day ? day.exercises : [];
+    list.innerHTML = exercises.map(function(exercise, index){
+      return buildTrackerExerciseArticle(exercise, index);
+    }).join('');
+    var metaEl = qs('tracker-session-meta');
+    if(metaEl) metaEl.textContent = exercises.length + (exercises.length === 1 ? ' exercise planned' : ' exercises planned');
+  }
+
+  function updateActiveDayName(){
+    var day = state.workoutDoc.splitDays[state.activeDayIndex];
+    state.activeDayName = day ? day.name : 'Live Session';
+    var titleEl = qs('tracker-day-title');
+    if(titleEl) titleEl.textContent = state.activeDayName;
+  }
+
+  function populateTrackerDaySelect(){
+    var header = document.querySelector('.tracker-header');
+    if(!header) return;
+    var select = qs('tracker-day-select');
+    if(!select){
+      var wrap = document.createElement('div');
+      wrap.id = 'tracker-day-select-wrap';
+      wrap.innerHTML = '<div class="eyebrow">Training day</div><select id="tracker-day-select" aria-label="Select training day"></select>';
+      header.insertBefore(wrap, header.firstChild);
+      select = qs('tracker-day-select');
+      select.addEventListener('change', function(){
+        state.activeDayIndex = Number(select.value)||0;
+        renderTrackerExerciseList();
+        updateActiveDayName();
+      });
+    }
+    select.innerHTML = state.workoutDoc.splitDays.map(function(day, index){
+      return '<option value="'+index+'">'+padIndex(index+1)+' '+escapeHtml(day.name)+'</option>';
+    }).join('');
+    select.value = String(state.activeDayIndex);
+  }
+
+  function startLiveTracker(){
+    showView('live-tracker-view');
+    state.timerSeconds = 0;
+    updateTimerDisplay();
+    stopSessionTimer();
+    state.timerInterval = setInterval(function(){
+      state.timerSeconds++;
+      updateTimerDisplay();
+    }, 1000);
+    state.activeDayIndex = 0;
+    populateTrackerDaySelect();
+    renderTrackerExerciseList();
+    updateActiveDayName();
+  }
+
+  function collectTrackerExercises(){
+    var exercises = [];
+    var list = qs('tracker-exercise-list');
+    if(!list) return exercises;
+    list.querySelectorAll('.tracker-exercise').forEach(function(article){
+      var nameInput = article.querySelector('.tracker-name-input');
+      var name = nameInput && nameInput.value ? nameInput.value : 'Exercise';
+      var sets = [];
+      article.querySelectorAll('.set-table tbody tr').forEach(function(row){
+        var checkbox = row.querySelector('.set-check');
+        var numberInputs = row.querySelectorAll('input[type="number"]');
+        var repsInput = numberInputs[0];
+        var weightInput = numberInputs[1];
+        sets.push({
+          done: checkbox ? checkbox.checked : false,
+          reps: repsInput && repsInput.value ? Number(repsInput.value) : 0,
+          weight: weightInput && weightInput.value ? Number(weightInput.value) : 0
+        });
+      });
+      exercises.push({ name: name, sets: sets });
+    });
+    return exercises;
+  }
+
+  function calculateTotalVolume(exercises){
+    var total = 0;
+    exercises.forEach(function(exercise){
+      exercise.sets.forEach(function(set){
+        if(set.done) total += set.reps * set.weight;
+      });
+    });
+    return total;
+  }
+
+  function showSummary(totalVolume, durationSeconds){
+    var volumeEl = qs('summary-total-volume');
+    if(volumeEl) volumeEl.textContent = totalVolume.toLocaleString() + ' kg';
+    var minutes = Math.round(durationSeconds/60);
+    var timeEl = qs('summary-session-time');
+    if(timeEl) timeEl.textContent = minutes + ' min';
+    var dateEl = qs('summary-date');
+    if(dateEl){
+      var now = new Date();
+      var formatted = now.toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+      dateEl.textContent = formatted + ' · ' + (state.activeDayName || 'Workout');
+    }
+    showView('post-workout-summary-view');
+  }
+
+  function persistWorkoutLog(complete){
+    var exercises = collectTrackerExercises();
+    var totalVolume = calculateTotalVolume(exercises);
+    var durationSeconds = state.timerSeconds;
+    var logData = {
+      userId: state.uid,
+      dayName: state.activeDayName || 'Workout',
+      exercises: exercises,
+      totalVolume: totalVolume,
+      durationSeconds: durationSeconds,
+      complete: complete,
+      completedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if(!window.firebaseReady || !state.uid){
+      if(complete){
+        stopSessionTimer();
+        showSummary(totalVolume, durationSeconds);
+      }
+      return;
+    }
+    window.db.collection('workoutLogs').add(logData).then(function(){
+      if(complete){
+        stopSessionTimer();
+        showSummary(totalVolume, durationSeconds);
+      }
+    }).catch(function(e){
+      console.error('Failed to save workout log', {code: e && e.code, message: e && e.message});
+      if(complete){
+        stopSessionTimer();
+        showSummary(totalVolume, durationSeconds);
+      }
+    });
+  }
+
+  function syncDayCount(input, docState, renderFn, persistFn, defaultThirdField, defaultThirdValue){
+    var target = Number(input.value)||1;
+    if(target < 1) target = 1;
+    if(target > 7) target = 7;
+    input.value = target;
+    var days = docState.splitDays;
+    while(days.length < target){
+      var exercise = { name: '', sets: 3 };
+      exercise[defaultThirdField] = defaultThirdValue;
+      days.push({ name: 'Day '+(days.length+1), exercises: [exercise] });
+    }
+    while(days.length > target){
+      days.pop();
+    }
+    renderFn();
+    persistFn();
+  }
+
+  function initNav(){
+    if(qs('nav-workout-creation')) qs('nav-workout-creation').addEventListener('click', function(){
+      showView('workout-creation-view');
+    });
+    if(qs('nav-mobility-creation')) qs('nav-mobility-creation').addEventListener('click', function(){
+      showView('mobility-creation-view');
+    });
+    if(qs('nav-live-tracker')) qs('nav-live-tracker').addEventListener('click', startLiveTracker);
+    if(qs('close-workout-creation')) qs('close-workout-creation').addEventListener('click', function(){
+      showView('dashboard-view');
+    });
+    if(qs('close-mobility-creation')) qs('close-mobility-creation').addEventListener('click', function(){
+      showView('dashboard-view');
+    });
+    if(qs('back-to-workouts-btn')) qs('back-to-workouts-btn').addEventListener('click', function(){
+      showView('dashboard-view');
+    });
+    if(qs('post-workout-done-btn')) qs('post-workout-done-btn').addEventListener('click', function(){
+      showView('dashboard-view');
+    });
+  }
+
+  function initChoiceCards(){
+    document.querySelectorAll('.choice-card input[type="radio"]').forEach(function(radio){
+      radio.addEventListener('change', function(){
+        var group = radio.closest('.split-choice');
+        if(group){
+          group.querySelectorAll('.choice-card').forEach(function(card){
+            card.classList.remove('selected');
+          });
+        }
+        var card = radio.closest('.choice-card');
+        if(card) card.classList.add('selected');
+        if(radio.name === 'workout-plan-type'){
+          state.workoutDoc.planType = radio.value;
+          persistWorkoutSplit();
+        } else if(radio.name === 'mobility-plan-type'){
+          state.mobilityDoc.planType = radio.value;
+          persistMobilityRoutine();
+        }
+      });
+    });
+  }
+
+  function initBuilders(){
+    attachSplitListEvents('workout-split-list', state.workoutDoc, renderWorkoutDays, persistWorkoutSplit, 'reps', '8–12');
+    attachSplitListEvents('mobility-split-list', state.mobilityDoc, renderMobilityDays, persistMobilityRoutine, 'duration', '45 sec');
+
+    if(qs('add-workout-day-btn')) qs('add-workout-day-btn').addEventListener('click', function(){
+      var name = prompt('Name this training day', 'New Day');
+      if(!name) return;
+      state.workoutDoc.splitDays.push({ name: name, exercises: [{ name:'', sets:3, reps:'8–12' }] });
+      renderWorkoutDays();
+      persistWorkoutSplit();
+    });
+    if(qs('add-mobility-day-btn')) qs('add-mobility-day-btn').addEventListener('click', function(){
+      var name = prompt('Name this mobility day', 'New Day');
+      if(!name) return;
+      state.mobilityDoc.splitDays.push({ name: name, exercises: [{ name:'', sets:2, duration:'45 sec' }] });
+      renderMobilityDays();
+      persistMobilityRoutine();
+    });
+
+    if(qs('workout-days')) qs('workout-days').addEventListener('change', function(){
+      syncDayCount(qs('workout-days'), state.workoutDoc, renderWorkoutDays, persistWorkoutSplit, 'reps', '8–12');
+    });
+    if(qs('mobility-days')) qs('mobility-days').addEventListener('change', function(){
+      syncDayCount(qs('mobility-days'), state.mobilityDoc, renderMobilityDays, persistMobilityRoutine, 'duration', '45 sec');
+    });
+
+    if(qs('workout-goal')) qs('workout-goal').addEventListener('change', persistWorkoutSplit);
+    if(qs('mobility-focus')) qs('mobility-focus').addEventListener('change', persistMobilityRoutine);
+
+    if(qs('maximize-split-btn')) qs('maximize-split-btn').addEventListener('click', runWorkoutAudit);
+    if(qs('maximize-mobility-btn')) qs('maximize-mobility-btn').addEventListener('click', runMobilityAudit);
+  }
+
+  function initTracker(){
+    if(qs('discard-workout-btn')) qs('discard-workout-btn').addEventListener('click', function(){
+      stopSessionTimer();
+      showView('dashboard-view');
+    });
+    if(qs('save-exit-btn')) qs('save-exit-btn').addEventListener('click', function(){
+      persistWorkoutLog(false);
+      stopSessionTimer();
+      showView('dashboard-view');
+    });
+    if(qs('finish-workout-btn')) qs('finish-workout-btn').addEventListener('click', function(){
+      persistWorkoutLog(true);
+    });
+    if(qs('add-tracker-exercise-btn')) qs('add-tracker-exercise-btn').addEventListener('click', function(){
+      var list = qs('tracker-exercise-list');
+      if(!list) return;
+      var index = list.querySelectorAll('.tracker-exercise').length + 1;
+      var article = document.createElement('article');
+      article.className = 'tracker-exercise';
+      article.innerHTML = '<div class="tracker-exercise-header"><span class="tracker-exercise-title"><span class="tracker-exercise-index">'+index+'.</span><input type="text" class="tracker-name-input" list="exercise-master-list" placeholder="Exercise name" aria-label="Exercise name"></span><span class="muted">Target: 3 × 8–12</span></div>'
+        + '<table class="set-table"><thead><tr><th>Done</th><th>Set</th><th>Reps</th><th>Weight</th><th>Previous</th></tr></thead>'
+        + '<tbody><tr><td><input class="set-check" type="checkbox" aria-label="Complete set 1"></td><td>1</td><td><input type="number" placeholder="—" aria-label="Set 1 reps"></td><td><input type="number" placeholder="—" aria-label="Set 1 weight"><span class="muted"> kg</span></td><td class="muted">—</td></tr></tbody></table>'
+        + '<div style="padding:0 14px 16px"><button class="small-action add-set-btn" type="button">+ Add set</button></div>';
+      list.appendChild(article);
+      var nameInput = article.querySelector('.tracker-name-input');
+      if(nameInput) nameInput.focus();
+    });
+    document.addEventListener('click', function(e){
+      if(!e.target.classList.contains('add-set-btn')) return;
+      var article = e.target.closest('.tracker-exercise');
+      if(!article) return;
+      var tbody = article.querySelector('.set-table tbody');
+      if(!tbody) return;
+      var setNumber = tbody.querySelectorAll('tr').length + 1;
+      var row = document.createElement('tr');
+      row.innerHTML = '<td><input class="set-check" type="checkbox" aria-label="Complete set '+setNumber+'"></td><td>'+setNumber+'</td>'
+        + '<td><input type="number" placeholder="—" aria-label="Set '+setNumber+' reps"></td>'
+        + '<td><input type="number" placeholder="—" aria-label="Set '+setNumber+' weight"><span class="muted"> kg</span></td>'
+        + '<td class="muted">—</td>';
+      tbody.appendChild(row);
+    });
+  }
+
+  function init(){
+    injectExerciseDatalist();
+    initNav();
+    initChoiceCards();
+    initBuilders();
+    initTracker();
+    state.workoutDoc.splitDays = parseInitialSplitState('workout-split-list', 'reps');
+    state.mobilityDoc.splitDays = parseInitialSplitState('mobility-split-list', 'duration');
+  }
+
+  init();
+
+  window.addEventListener('firebaseAuthReady', function(e){
+    var user = e.detail ? e.detail.user : null;
+    if(!user) return;
+    state.uid = user.uid;
+    var appRoot = qs('appRoot');
+    if(appRoot) appRoot.style.display = '';
+    loadWorkoutSplit();
+    loadMobilityRoutine();
+  });
+})();
+  </script>
+</body>
+</html>
