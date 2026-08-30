@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager | Life OS</title>
+    <link rel="stylesheet" href="global.css">
+    <style>
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 32px;
+            margin-top: 32px;
+        }
+        @media (max-width: 1000px) {
+            .layout-grid { grid-template-columns: 1fr; }
+        }
+        .division-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 4px 4px 16px;
+            margin-bottom: 24px;
+            scrollbar-width: none;
+        }
+        .division-scroll::-webkit-scrollbar { display: none; }
+        .catbtn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .catbtn-remove {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            line-height: 1;
+            background: rgba(0, 0, 0, 0.15);
+            transition: 0.1s ease;
+        }
+        .catbtn-remove:hover {
+            background: var(--crimson);
+            color: var(--panel);
+        }
+        .task-input-group {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto auto;
+            gap: 16px;
+            align-items: flex-end;
+        }
+        @media (max-width: 700px) {
+            .task-input-group { grid-template-columns: 1fr; }
+        }
+        .task-input-group select {
+            font-family: inherit;
+        }
+        .task-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 24px;
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: var(--panel-2);
+            border: 3px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 18px 24px;
+            box-shadow: 0 4px 0 var(--shadow-color);
+            transition: transform 0.1s ease;
+        }
+        .task-item:hover { transform: translateX(6px); }
+        .task-content { flex: 1; }
+        .task-name { font-weight: 700; font-size: 17px; margin-bottom: 4px; }
+        .task-details {
+            font-family: var(--font-display);
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .check-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 4px solid var(--border);
+            background: var(--panel);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.1s ease;
+            flex-shrink: 0;
+            box-shadow: 0 3px 0 var(--shadow-color);
+        }
+        .check-btn:hover { background: var(--mint); transform: scale(1.1); }
+        .task-item.done { opacity: 0.5; }
+        .task-item.done .task-name { text-decoration: line-through; }
+        .task-item.done .check-btn { background: var(--mint); }
+        .deadline-safe {
+            border-left: 12px solid var(--success);
+            background: linear-gradient(90deg, rgba(85, 230, 193, 0.15) 0%, var(--panel-2) 100%);
+        }
+        .deadline-warning {
+            border-left: 12px solid var(--orange);
+            background: linear-gradient(90deg, rgba(255, 159, 67, 0.15) 0%, var(--panel-2) 100%);
+        }
+        .deadline-danger {
+            border-left: 12px solid var(--danger);
+            background: linear-gradient(90deg, rgba(255, 107, 107, 0.15) 0%, var(--panel-2) 100%);
+        }
+        .medal-box {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .medal-item {
+            background: var(--panel-3);
+            border: 4px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            box-shadow: 0 6px 0 var(--shadow-color);
+            position: relative;
+        }
+        .medal-info { flex: 1; }
+        .medal-title {
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 16px;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+        .medal-sub { font-size: 12px; color: var(--text-muted); font-weight: 700; }
+        .massive-check {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            border: 5px solid var(--border);
+            background: var(--panel);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 6px 0 var(--shadow-color);
+            flex-shrink: 0;
+        }
+        .massive-check:hover { transform: scale(1.05) translateY(-2px); box-shadow: 0 8px 0 var(--shadow-color); }
+        .massive-check:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--shadow-color); }
+        .medal-item.conquered {
+            background: var(--gold);
+            border-color: var(--gold-shadow);
+            box-shadow: 0 6px 0 var(--gold-shadow);
+        }
+        .medal-item.conquered .medal-title { color: var(--border); }
+        .medal-item.conquered .medal-sub { color: rgba(0, 0, 0, 0.6); }
+        .medal-item.conquered .massive-check {
+            background: var(--border);
+            color: var(--gold);
+            border-color: var(--border);
+            box-shadow: 0 6px 0 var(--gold-shadow);
+        }
+        .medal-remove {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            line-height: 1;
+            background: rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: 0.1s ease;
+            z-index: 2;
+        }
+        .medal-remove:hover { background: var(--crimson); color: var(--panel); }
+        .medal-item.conquered .medal-remove { background: rgba(0, 0, 0, 0.25); color: var(--gold); }
+        .medal-item.conquered .medal-remove:hover { background: var(--crimson); color: var(--panel); }
+        .add-medal-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .add-medal-row input {
+            flex: 1;
+            min-width: 0;
+            background: var(--panel-2);
+            border: 3px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            color: var(--text);
+            font-family: var(--font-body);
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .section-label {
+            font-family: var(--font-display);
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin: 40px 0 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .section-label::after { content: ""; flex: 1; height: 3px; background: var(--panel-3); border-radius: 99px; }
+        .task-empty-state {
+            font-family: var(--font-display);
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 18px 4px;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="app">
+        <header class="topbar">
+            <div class="wordmark">
+                TASK MANAGER
+                <span>LIFE OS / MVP BRANCH</span>
+            </div>
+            <div class="topbar-right">
+                <button class="btn" onclick="window.location.href='index.html'">Back to Dashboard</button>
+            </div>
+        </header>
+
+        <div class="division-scroll" id="divisionScroll"></div>
+
+        <div class="layout-grid">
+            <main class="main-column">
+                <div class="panel">
+                    <h2 class="panel-title">Deploy New Task</h2>
+                    <div class="task-input-group">
+                        <div class="field" style="margin:0;">
+                            <label>Description</label>
+                            <input type="text" id="taskDescInput" placeholder="Initialize objective...">
+                        </div>
+                        <div class="field" style="margin:0;">
+                            <label>Category</label>
+                            <select id="taskCategorySelect"></select>
+                        </div>
+                        <div class="field" style="margin:0;">
+                            <label>Due Date</label>
+                            <input type="date" id="taskDueDateInput">
+                        </div>
+                        <div class="field" style="margin:0;">
+                            <label>Time</label>
+                            <input type="time" id="taskTimeInput">
+                        </div>
+                        <button class="btn btn-primary" id="addTaskBtn">Add Task</button>
+                    </div>
+                </div>
+
+                <div class="section-label">Active Operations</div>
+                <div class="task-list-container" id="activeTaskList"></div>
+
+                <div class="section-label">Completed</div>
+                <div class="task-list-container" id="completedTaskList"></div>
+            </main>
+
+            <aside class="side-panel">
+                <div class="panel">
+                    <h2 class="panel-title">Prestigious Medals</h2>
+                    <div class="medal-box" id="medalBox"></div>
+                    <div class="add-medal-row">
+                        <input type="text" id="medalTitleInput" placeholder="New medal name...">
+                        <button class="btn btn-primary" id="addMedalBtn">Add</button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="global.js"></script>
+    <script>
+        var currentUser = null;
+        var tasksUnsub = null;
+        var allTasks = [];
+        var categories = ['Academic', 'Health', 'Shopping', 'Work'];
+        var activeCategory = 'All Divisions';
+        var renderIntervalId = null;
+        var medals = [];
+
+        var divisionScroll = document.getElementById('divisionScroll');
+        var activeTaskList = document.getElementById('activeTaskList');
+        var completedTaskList = document.getElementById('completedTaskList');
+        var descInput = document.getElementById('taskDescInput');
+        var categorySelect = document.getElementById('taskCategorySelect');
+        var dueDateInput = document.getElementById('taskDueDateInput');
+        var timeInput = document.getElementById('taskTimeInput');
+        var addTaskBtn = document.getElementById('addTaskBtn');
+        var medalBox = document.getElementById('medalBox');
+        var medalTitleInput = document.getElementById('medalTitleInput');
+        var addMedalBtn = document.getElementById('addMedalBtn');
+
+        function getDeadlineInfo(dueDate, time) {
+            if (!dueDate) return { className: '', label: 'No Deadline' };
+            var dateStr = dueDate + 'T' + (time ? time : '23:59') + ':00';
+            var due = new Date(dateStr);
+            if (isNaN(due.getTime())) return { className: '', label: 'No Deadline' };
+            var diffMs = due.getTime() - Date.now();
+            var diffHours = diffMs / (1000 * 60 * 60);
+            if (diffHours < 0) return { className: 'deadline-danger', label: 'Overdue' };
+            if (diffHours <= 24) return { className: 'deadline-danger', label: formatDueLabel(diffHours) };
+            if (diffHours <= 72) return { className: 'deadline-warning', label: formatDueLabel(diffHours) };
+            return { className: 'deadline-safe', label: formatDueLabel(diffHours) };
+        }
+
+        function formatDueLabel(diffHours) {
+            if (diffHours < 1) return 'Due in ' + Math.max(1, Math.round(diffHours * 60)) + ' Minutes';
+            if (diffHours < 24) return 'Due in ' + Math.round(diffHours) + ' Hours';
+            var days = Math.round(diffHours / 24);
+            return 'Due in ' + days + (days === 1 ? ' Day' : ' Days');
+        }
+
+        function getDeadlineSortValue(task) {
+            if (!task.dueDate) return Infinity;
+            var dateStr = task.dueDate + 'T' + (task.time ? task.time : '23:59') + ':00';
+            var due = new Date(dateStr);
+            return isNaN(due.getTime()) ? Infinity : due.getTime();
+        }
+
+        function createTaskElement(task) {
+            var item = document.createElement('div');
+            item.className = 'task-item';
+            if (task.status === 'completed') {
+                item.classList.add('done');
+            } else if (task.dueDate) {
+                var info = getDeadlineInfo(task.dueDate, task.time);
+                if (info.className) item.classList.add(info.className);
+            }
+            var checkBtn = document.createElement('div');
+            checkBtn.className = 'check-btn';
+            checkBtn.textContent = task.status === 'completed' ? '✓' : '';
+            checkBtn.addEventListener('click', function () {
+                toggleTaskStatus(task);
+            });
+            var content = document.createElement('div');
+            content.className = 'task-content';
+            var nameEl = document.createElement('div');
+            nameEl.className = 'task-name';
+            nameEl.textContent = task.description;
+            var detailsEl = document.createElement('div');
+            detailsEl.className = 'task-details';
+            var parts = [task.category || 'General'];
+            if (task.status === 'completed') {
+                parts.push('Completed');
+            } else if (task.dueDate) {
+                parts.push(getDeadlineInfo(task.dueDate, task.time).label);
+            } else {
+                parts.push('No Deadline');
+            }
+            detailsEl.textContent = parts.join(' • ');
+            content.appendChild(nameEl);
+            content.appendChild(detailsEl);
+            item.appendChild(checkBtn);
+            item.appendChild(content);
+            return item;
+        }
+
+        function renderTasks() {
+            if (!activeTaskList || !completedTaskList) return;
+            var filtered = activeCategory === 'All Divisions' ? allTasks : allTasks.filter(function (t) { return t.category === activeCategory; });
+            var active = filtered.filter(function (t) { return t.status !== 'completed'; });
+            var completed = filtered.filter(function (t) { return t.status === 'completed'; });
+            active.sort(function (a, b) { return getDeadlineSortValue(a) - getDeadlineSortValue(b); });
+            activeTaskList.innerHTML = '';
+            if (active.length === 0) {
+                var emptyActive = document.createElement('div');
+                emptyActive.className = 'task-empty-state';
+                emptyActive.textContent = 'No active operations in this division.';
+                activeTaskList.appendChild(emptyActive);
+            } else {
+                active.forEach(function (t) { activeTaskList.appendChild(createTaskElement(t)); });
+            }
+            completedTaskList.innerHTML = '';
+            if (completed.length === 0) {
+                var emptyCompleted = document.createElement('div');
+                emptyCompleted.className = 'task-empty-state';
+                emptyCompleted.textContent = 'No completed objectives yet.';
+                completedTaskList.appendChild(emptyCompleted);
+            } else {
+                completed.forEach(function (t) { completedTaskList.appendChild(createTaskElement(t)); });
+            }
+        }
+
+        function subscribeTasks() {
+            if (tasksUnsub) tasksUnsub();
+            tasksUnsub = window.db.collection('tasks').where('userId', '==', currentUser.uid).onSnapshot(function (snapshot) {
+                var next = [];
+                snapshot.forEach(function (doc) {
+                    next.push(Object.assign({ id: doc.id }, doc.data()));
+                });
+                allTasks = next;
+                renderTasks();
+            }, function (e) {
+                console.error('Failed to load tasks', { code: e && e.code, message: e && e.message });
+            });
+        }
+
+        async function addTask() {
+            var desc = descInput.value.trim();
+            if (!desc) return;
+            var category = categorySelect.value || 'General';
+            var dueDate = dueDateInput.value;
+            var time = timeInput.value;
+            addTaskBtn.disabled = true;
+            try {
+                await window.db.collection('tasks').add({
+                    description: desc,
+                    category: category,
+                    dueDate: dueDate,
+                    time: time,
+                    status: 'active',
+                    userId: currentUser.uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                descInput.value = '';
+                dueDateInput.value = '';
+                timeInput.value = '';
+            } catch (e) {
+                console.error('Failed to add task', { code: e && e.code, message: e && e.message });
+            } finally {
+                addTaskBtn.disabled = false;
+            }
+        }
+
+        async function toggleTaskStatus(task) {
+            var newStatus = task.status === 'completed' ? 'active' : 'completed';
+            try {
+                await window.db.collection('tasks').doc(task.id).update({
+                    status: newStatus,
+                    completedAt: newStatus === 'completed' ? firebase.firestore.FieldValue.serverTimestamp() : null
+                });
+            } catch (e) {
+                console.error('Failed to update task status', { code: e && e.code, message: e && e.message });
+            }
+        }
+
+        function renderCategoryButtons() {
+            divisionScroll.innerHTML = '';
+            var allBtn = document.createElement('button');
+            allBtn.className = 'catbtn' + (activeCategory === 'All Divisions' ? ' active' : '');
+            allBtn.textContent = 'All Divisions';
+            allBtn.addEventListener('click', function () { setActiveCategory('All Divisions'); });
+            divisionScroll.appendChild(allBtn);
+            categories.forEach(function (cat) {
+                var btn = document.createElement('button');
+                btn.className = 'catbtn' + (activeCategory === cat ? ' active' : '');
+                btn.addEventListener('click', function () { setActiveCategory(cat); });
+                var label = document.createElement('span');
+                label.textContent = cat;
+                btn.appendChild(label);
+                var removeIcon = document.createElement('span');
+                removeIcon.className = 'catbtn-remove';
+                removeIcon.textContent = '×';
+                removeIcon.addEventListener('click', function (ev) {
+                    ev.stopPropagation();
+                    deleteCategory(cat);
+                });
+                btn.appendChild(removeIcon);
+                divisionScroll.appendChild(btn);
+            });
+            var newBtn = document.createElement('button');
+            newBtn.className = 'catbtn';
+            newBtn.style.borderStyle = 'dashed';
+            newBtn.style.color = 'var(--teal)';
+            newBtn.textContent = '+ New Category';
+            newBtn.addEventListener('click', addNewCategory);
+            divisionScroll.appendChild(newBtn);
+        }
+
+        function renderCategorySelectOptions() {
+            categorySelect.innerHTML = '';
+            categories.forEach(function (cat) {
+                var opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                categorySelect.appendChild(opt);
+            });
+        }
+
+        function setActiveCategory(cat) {
+            activeCategory = cat;
+            renderCategoryButtons();
+            renderTasks();
+        }
+
+        function addNewCategory() {
+            var name = window.prompt('New Category Name');
+            if (!name) return;
+            var trimmed = name.trim();
+            if (!trimmed) return;
+            if (categories.indexOf(trimmed) === -1) {
+                categories.push(trimmed);
+                saveCategories();
+                renderCategorySelectOptions();
+            }
+            setActiveCategory(trimmed);
+        }
+
+        async function deleteCategory(cat) {
+            var index = categories.indexOf(cat);
+            if (index === -1) return;
+            var previous = categories.slice();
+            var wasActive = activeCategory === cat;
+            categories.splice(index, 1);
+            if (wasActive) activeCategory = 'All Divisions';
+            renderCategoryButtons();
+            renderCategorySelectOptions();
+            renderTasks();
+            try {
+                await window.db.collection('taskCategories').doc(currentUser.uid).set({ categories: categories });
+            } catch (e) {
+                console.error('Failed to delete category', { code: e && e.code, message: e && e.message });
+                categories = previous;
+                renderCategoryButtons();
+                renderCategorySelectOptions();
+                renderTasks();
+            }
+        }
+ 
+        async function loadCategories() {
+            try {
+                var docSnap = await window.db.collection('taskCategories').doc(currentUser.uid).get();
+                if (docSnap.exists) {
+                    var data = docSnap.data();
+                    if (Array.isArray(data.categories) && data.categories.length) {
+                        categories = data.categories;
+                    } else {
+                        await saveCategories();
+                    }
+                } else {
+                    await saveCategories();
+                }
+            } catch (e) {
+                console.error('Failed to load categories', { code: e && e.code, message: e && e.message });
+            }
+            renderCategoryButtons();
+            renderCategorySelectOptions();
+        }
+
+        async function saveCategories() {
+            try {
+                await window.db.collection('taskCategories').doc(currentUser.uid).set({ categories: categories });
+            } catch (e) {
+                console.error('Failed to save categories', { code: e && e.code, message: e && e.message });
+            }
+        }
+
+        function generateMedalId() {
+            return 'medal_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+        }
+
+        function defaultMedals() {
+            return [
+                { id: generateMedalId(), title: 'Scholar King', sub: 'Complete 50 Academic Tasks', conquered: false },
+                { id: generateMedalId(), title: 'Health Guardian', sub: '30 Day Fitness Streak', conquered: false },
+                { id: generateMedalId(), title: 'Task Master', sub: '100 Total Objectives', conquered: false }
+            ];
+        }
+
+        function createMedalElement(medal) {
+            var item = document.createElement('div');
+            item.className = 'medal-item' + (medal.conquered ? ' conquered' : '');
+            item.setAttribute('data-medal-id', medal.id);
+
+            var removeIcon = document.createElement('span');
+            removeIcon.className = 'medal-remove';
+            removeIcon.textContent = '×';
+            removeIcon.addEventListener('click', function (ev) {
+                ev.stopPropagation();
+                deleteMedal(medal.id);
+            });
+
+            var info = document.createElement('div');
+            info.className = 'medal-info';
+            var titleEl = document.createElement('div');
+            titleEl.className = 'medal-title';
+            titleEl.textContent = medal.title;
+            var subEl = document.createElement('div');
+            subEl.className = 'medal-sub';
+            subEl.textContent = medal.sub || 'Custom Medal';
+            info.appendChild(titleEl);
+            info.appendChild(subEl);
+
+            var checkBtn = document.createElement('div');
+            checkBtn.className = 'massive-check';
+            checkBtn.textContent = medal.conquered ? '✓' : '';
+            checkBtn.addEventListener('click', function () {
+                toggleMedal(medal.id);
+            });
+
+            item.appendChild(removeIcon);
+            item.appendChild(info);
+            item.appendChild(checkBtn);
+            return item;
+        }
+
+        function renderMedals() {
+            if (!medalBox) return;
+            medalBox.innerHTML = '';
+            if (medals.length === 0) {
+                var empty = document.createElement('div');
+                empty.className = 'task-empty-state';
+                empty.textContent = 'No medals yet. Add one below.';
+                medalBox.appendChild(empty);
+                return;
+            }
+            medals.forEach(function (medal) {
+                medalBox.appendChild(createMedalElement(medal));
+            });
+        }
+
+        async function persistMedals(rollbackFn) {
+            try {
+                await window.db.collection('taskMedals').doc(currentUser.uid).set({ medals: medals });
+                return true;
+            } catch (e) {
+                console.error('Failed to save medals', { code: e && e.code, message: e && e.message });
+                if (rollbackFn) rollbackFn();
+                renderMedals();
+                return false;
+            }
+        }
+
+        async function toggleMedal(id) {
+            var medal = medals.find(function (m) { return m.id === id; });
+            if (!medal) return;
+            medal.conquered = !medal.conquered;
+            renderMedals();
+            await persistMedals(function () { medal.conquered = !medal.conquered; });
+        }
+
+        async function addMedal() {
+            var title = medalTitleInput.value.trim();
+            if (!title) return;
+            var newMedal = { id: generateMedalId(), title: title, sub: 'Custom Medal', conquered: false };
+            medals.push(newMedal);
+            medalTitleInput.value = '';
+            renderMedals();
+            await persistMedals(function () {
+                var idx = medals.indexOf(newMedal);
+                if (idx !== -1) medals.splice(idx, 1);
+            });
+        }
+
+        async function deleteMedal(id) {
+            var index = medals.findIndex(function (m) { return m.id === id; });
+            if (index === -1) return;
+            var removed = medals[index];
+            medals.splice(index, 1);
+            renderMedals();
+            await persistMedals(function () { medals.splice(index, 0, removed); });
+        }
+
+        async function loadMedals() {
+            try {
+                var docSnap = await window.db.collection('taskMedals').doc(currentUser.uid).get();
+                if (docSnap.exists) {
+                    var data = docSnap.data();
+                    if (Array.isArray(data.medals) && data.medals.length) {
+                        medals = data.medals;
+                    } else {
+                        medals = defaultMedals();
+                        await persistMedals();
+                    }
+                } else {
+                    medals = defaultMedals();
+                    await persistMedals();
+                }
+            } catch (e) {
+                console.error('Failed to load medals', { code: e && e.code, message: e && e.message });
+                medals = defaultMedals();
+            }
+            renderMedals();
+        }
+
+        function initTasks(user) {
+            currentUser = user;
+            loadMedals();
+            loadCategories();
+            subscribeTasks();
+            addTaskBtn.addEventListener('click', addTask);
+            addMedalBtn.addEventListener('click', addMedal);
+            if (renderIntervalId) clearInterval(renderIntervalId);
+            renderIntervalId = setInterval(renderTasks, 60000);
+        }
+
+        window.addEventListener('firebaseAuthReady', function (e) {
+            if (e.detail && e.detail.user) {
+                initTasks(e.detail.user);
+            }
+        });
+    </script>
+</body>
+</html>
